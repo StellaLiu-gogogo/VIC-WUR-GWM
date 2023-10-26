@@ -95,7 +95,7 @@ plugin_store_error(size_t iCell)
         for (i = 0; i < WU_NSECTORS; i++) {
             outflow += out_data[iCell][N_OUTVAR_TYPES + OUT_WI_SURF_SECT][i] +
                        out_data[iCell][N_OUTVAR_TYPES + OUT_WI_DAM_SECT][i] +
-                       out_data[iCell][N_OUTVAR_TYPES + OUT_WI_REM_SECT][i]+;
+                       out_data[iCell][N_OUTVAR_TYPES + OUT_WI_REM_SECT][i];
         }
     }
 
