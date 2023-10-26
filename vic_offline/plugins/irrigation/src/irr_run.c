@@ -66,7 +66,6 @@ irr_run_requirement(size_t iCell)
     csoil_con = &(soil_con[iCell]);
 
     for (iIrr = 0; iIrr < irr_con_map[iCell].ni_active; iIrr++) {
-        //first get some constants for the current irrigation/veg type
         cirr_con = &(irr_con[iCell][iIrr]); // current  Irrigation Constants
         cveg_con = &(veg_con[iCell][cirr_con->veg_index]); // current vegetation type's constants
 
@@ -77,13 +76,13 @@ irr_run_requirement(size_t iCell)
             // Reset values
             cirr_var->requirement = 0.0;
             cirr_var->flag_req = false;
-            ccell_var->layer[0].Ksat = csoil_con->Ksat[0]; //reset ksat for the first soil layer
+            ccell_var->layer[0].Ksat = csoil_con->Ksat[0]; 
         }
 
         veg_fract = cveg_con->Cv;
 
-        if (current == 0 ||
-            dmy[current].day_in_year != dmy[current - 1].day_in_year) { //if it is the first time step of the simulation or the first time step of a new day
+        if (current == 0 || //if it is the first day of the simulation
+            dmy[current].day_in_year != dmy[current - 1].day_in_year) { //if it is the first day of the year
             for (iBand = 0; iBand < options.SNOW_BAND; iBand++) {
                 cirr_var = &(irr_var[iCell][iIrr][iBand]);
 
