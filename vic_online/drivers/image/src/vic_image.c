@@ -90,11 +90,11 @@ main(int    argc,
 
     // Initialize MPI - note: logging not yet initialized
     status = MPI_Init(&argc, &argv); 
-    //MPI_Init(&argc, &argv); 这个函数用来初始化MPI环境。在任何MPI函数被调用之前，MPI_Init必须首先被调用。这个函数需要传递两个参数，分别是程序的参数个数（argc）和参数数组（argv）。
+    //MPI_Init(&argc, &argv); 
     if (status != MPI_SUCCESS) {
         fprintf(stderr, "MPI error in main(): %d\n", status);
         exit(EXIT_FAILURE);
-    } //查MPI环境是否成功初始化，如果失败，就输出错误信息，退出程序。
+    } 
 
     // Initialize Log Destination
     initialize_log();
