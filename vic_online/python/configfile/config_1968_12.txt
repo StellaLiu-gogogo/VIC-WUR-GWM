@@ -5,78 +5,85 @@
 #######################################################################
 # Time Options
 #######################################################################
-MODEL_STEPS_PER_DAY     1               # number of model time steps in 24 hour period
-SNOW_STEPS_PER_DAY      1               # number of snow model time steps in 24 hour period
-RUNOFF_STEPS_PER_DAY    24              # number of runoff time steps in 24 hour period
-ROUT_STEPS_PER_DAY		24				# number of routing time steps in 24 hour period
-WOFOST_STEPS_PER_DAY	1				# number of WOFOST time steps in 24 hour period
+MODEL_STEPS_PER_DAY     1               
+SNOW_STEPS_PER_DAY      1               
+RUNOFF_STEPS_PER_DAY    24              
+ROUT_STEPS_PER_DAY		24				
+WOFOST_STEPS_PER_DAY	1				
 
-STARTYEAR                               # year model simulation starts
-STARTMONTH                              # month model simulation starts
-STARTDAY                                # day model simulation starts
-ENDYEAR                 
-ENDMONTH                
-ENDDAY                  
-BASEFLOW                NIJSSEN2001     # ARNO = columns 5-8 are the standard VIC baseflow parameters; NIJSSEN2001 = columns 5-8 of soil file are baseflow parameters from Nijssen et al (2001) 
+STARTYEAR               1968
+STARTMONTH               12
+STARTDAY               01
+ENDYEAR               1968
+ENDMONTH               12
+ENDDAY               31
+BASEFLOW                NIJSSEN2001     
+
 
 #######################################################################
 # Simulation Options
 #######################################################################
-FULL_ENERGY             FALSE           # TRUE = calculate energy balance; FALSE = calculate water balance; Default = FALSE
-SNOW_BAND				FALSE           # TRUE = calculate snow bands;  Default = FALSE
+FULL_ENERGY             FALSE           
+SNOW_BAND				FALSE           
 
-QUICK_FLUX			    TRUE     		# TRUE = ground heat flux method of Liang et al (1999); FALSE = finite element method of Cherkauer et al (1999)
-EXP_TRANS				FALSE			# TRUE = exponential thermal nodes in soil;  Default = FALSE
-IMPLICIT                FALSE           # TRUE = implicit soil heat flux solution; FALSE = explicit soil heat flux solution; Default = TRUE
-NBARE                   2               # Number of bare soil types
-GWM                     TRUE            # TRUE = calculate groundwater recharge, no baseflow Default = FALSE
-INIT_STATE        
 
-FCAN_SRC				FROM_VEGPARAM   # FROM_VEGPARAM = get variable from vegetation parameter file; Default = FROM_DEFAULT
-LAI_SRC					FROM_VEGPARAM   # FROM_VEGPARAM = get variable from vegetation parameter file; Default = FROM_VEGPARAM
-ALB_SRC				    FROM_VEGPARAM   # FROM_VEGPARAM = get variable from vegetation parameter file; Default = FROM_VEGPARAM
-BCO2_SRC                FROM_VEGPARAM   # FROM_VEGPARAM = get variable from vegetation parameter file; Default = FROM_DEFAULT
-WFC_SRC                 FROM_VEGPARAM   # FROM_VEGPARAM = get variable from vegetation parameter file; Default = FROM_DEFAULT
+QUICK_FLUX			    TRUE     		
+EXP_TRANS				FALSE			
+IMPLICIT                FALSE         
+
+
+NBARE                   2               
+GWM                     TRUE            
+
+FCAN_SRC				FROM_VEGPARAM   
+LAI_SRC					FROM_VEGPARAM   
+ALB_SRC				    FROM_VEGPARAM   
+BCO2_SRC                FROM_VEGPARAM   
+WFC_SRC                 FROM_VEGPARAM   
+
 
 # Plugins
-ROUTING					TRUE			# TRUE = calculate routing; Default = FALSE
-DECOMPOSITION			BASIN			# RANDOM, BASIN or FILE; Default = RANDOM
-EFR						FALSE			# TRUE = calculate enviromental flow requirements;  Default = FALSE
-DAMS					TRUE			# TRUE = calculate dam operation;  Default = FALSE
-WATERUSE				TRUE			# TRUE = calculate water use;  Default = FALSE
-IRRIGATION				TRUE			# TRUE = calculate irrigation;  Default = FALSE
-WOFOST					TRUE		    # TRUE = calculate crops with wofost;  Default = FALSE
+ROUTING					TRUE			
+DECOMPOSITION			BASIN			
+EFR						FALSE			
+DAMS					TRUE			
+WATERUSE				TRUE			
+IRRIGATION				TRUE			
+WOFOST					TRUE		    
 
-LANDUSE_FORCE           TRUE            # TRUE = force vegetation coverage; Default = FALSE
+LANDUSE_FORCE           TRUE  
+FORCE_ROUTING           TRUE
 
-POTENTIAL_IRRIGATION    FALSE           # TRUE = potential irrigation withdrawals; Default = FALSE
-EFFICIENT_IRRIGATION    FALSE           # TRUE = efficient irrigation withdrawals; Default = FALSE
-OFFSET_IRRIGATION       TRUE            # TRUE = offset irrigation withdrawals; Default = FALSE
-PBARE                   21              # Number of bare soil types
 
-REMOTE_WITHDRAWAL       TRUE            # TRUE = enable remote water withdrawals; Default = FALSE
-NONRENEWABLE_WITHDRAWAL TRUE            # TRUE = enable non-renewable water withdrawals; Default = FALSE
+POTENTIAL_IRRIGATION    FALSE           
+EFFICIENT_IRRIGATION    FALSE           
+OFFSET_IRRIGATION       TRUE            
+PBARE                   21              
 
-WOFOST_POTENTIAL_IRRIGATION FALSE       # TRUE = ignore crop water stress; Default = FALSE
-WOFOST_POTENTIAL_FERTILIZER FALSE       # TRUE = ignore crop nutrient stress; Default = FALSE
-WOFOST_CONTINUE             TRUE        # TRUE = continue crop simulation to maturity after growing season; Default = FALSE
-WOFOST_DIST_SEASON          TRUE        # TRUE = get growing season from crop parameter file; Default = FALSE
-WOFOST_DIST_TSUM            TRUE        # TRUE = get tsums from crop parameter file; Default = FALSE
-WOFOST_DIST_MINERALIZATION  TRUE        # TRUE = get mineralization from crop parameter file; Default = FALSE
-WOFOST_CALC_MINERALIZATION  TRUE        # TRUE = calculate mineralization during runtime; Default = FALSE
-WOFOST_DIST_FERTILIZER 	    TRUE        # TRUE = get fertilizer from crop parameter file; Default = FALSE
-WOFOST_FORCE_FERTILIZER 	FALSE       # TRUE = force fertilizer from forcing file; Default = FALSE
+REMOTE_WITHDRAWAL       TRUE            
+NONRENEWABLE_WITHDRAWAL TRUE   
+
+
+WOFOST_POTENTIAL_IRRIGATION FALSE       
+WOFOST_POTENTIAL_FERTILIZER FALSE       
+WOFOST_CONTINUE             TRUE        
+WOFOST_DIST_SEASON          TRUE        
+WOFOST_DIST_TSUM            TRUE        
+WOFOST_DIST_MINERALIZATION  TRUE        
+WOFOST_CALC_MINERALIZATION  TRUE        
+WOFOST_DIST_FERTILIZER 	    TRUE        
+WOFOST_FORCE_FERTILIZER 	FALSE       
 
 #######################################################################
 # State Files and Parameters
 #######################################################################
-#INIT_STATE                                       # Initial state path/file, result files from last time step
-#STATENAME                                        # Output state file path/prefix. The time (STATEYEAR,STATEMONTH,STATEDAY,STATESEC)
-#STATEYEAR                                        # year to save model state
-#STATEMONTH                                       # month to save model state
-#STATEDAY                                         # day to save model state
-#STATESEC    82800                                # second to save model state
-#STATE_FORMAT           NETCDF4                   # State file format, valid options:
+INIT_STATE               /home/sliu/Documents/gitversion/VIC-WUR-GWM-1910/vic_online/python/statefile/statefile_1968_12_01
+STATENAME                                        
+STATEYEAR                                        
+STATEMONTH                                       
+STATEDAY                                         
+STATESEC    82800                               
+STATE_FORMAT           NETCDF4                   
 
 #######################################################################
 # Domain Files and Info
@@ -111,6 +118,8 @@ PLUGIN_FORCE_TYPE	  MUN_DEMAND		demand		        MONTH	/lustre/nobackup/WUR/ESG/l
 PLUGIN_FORCE_TYPE	  MUN_GROUNDWATER	groundwater         YEAR	/lustre/nobackup/WUR/ESG/liu297/vic_indus/11indus_run/04Forcing/02HumanImpact/sectoralGround_yearly/sectoralGround_yearly_
 PLUGIN_FORCE_TYPE	  MUN_CONSUMPTION	consumption         MONTH	/lustre/nobackup/WUR/ESG/liu297/vic_indus/11indus_run/04Forcing/02HumanImpact/sectoralConsump_monthly_historical_1970_2000/sectoralConsump_monthly_historical_1970_2000_
 
+
+
 #######################################################################
 # Land Surface Files and Info
 #######################################################################
@@ -133,7 +142,7 @@ OUTFILE							fluxes_UKESM1-0-LLadj_historical_1970_2000_baseline_human_gwm_
 OUT_FORMAT						NETCDF4
 COMPRESS						2
 AGGFREQ							NMONTHS	1
-HISTFREQ                        NYEARS 33
+HISTFREQ                        NMONTHS 1
 
 # Water flux
 OUTVAR							OUT_BASEFLOW
