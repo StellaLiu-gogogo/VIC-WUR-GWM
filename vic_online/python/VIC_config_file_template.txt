@@ -71,7 +71,6 @@ WOFOST_FORCE_FERTILIZER 	FALSE       # TRUE = force fertilizer from forcing file
 #######################################################################
 #INIT_STATE                                       # Initial state path/file, result files from last time step
 #STATENAME                                        # Output state file path/prefix. The time (STATEYEAR,STATEMONTH,STATEDAY,STATESEC)
-                                                  # will be appended to the prefix automatically in the format yyyymmdd.
 #STATEYEAR                                        # year to save model state
 #STATEMONTH                                       # month to save model state
 #STATEDAY                                         # day to save model state
