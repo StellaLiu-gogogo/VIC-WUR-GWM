@@ -19,10 +19,10 @@ vic_executable = '/home/sliu/Documents/vic_indus/99SourceCode/VIC-WUR-GWM-1910/v
 #%%
 startstamp = datetime(1968, 1, 1)
 current_date = startstamp
-enddate = datetime(1969, 1, 31)
+finishdate = datetime(1969, 1, 31)
 
 # Loop over the dates
-while current_date <= enddate:
+while current_date <= finishdate:
     startyear, startmonth, startday = current_date.year, current_date.month, current_date.day
     _, lastday = calendar.monthrange(startyear, startmonth)  # to get the last day of the month
     # startdate = datetime(year, month, day) # to get the startdate as a datetime object
