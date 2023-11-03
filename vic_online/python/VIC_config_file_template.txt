@@ -30,7 +30,6 @@ EXP_TRANS				FALSE			# TRUE = exponential thermal nodes in soil;  Default = FALS
 IMPLICIT                FALSE           # TRUE = implicit soil heat flux solution; FALSE = explicit soil heat flux solution; Default = TRUE
 NBARE                   2               # Number of bare soil types
 GWM                     TRUE            # TRUE = calculate groundwater recharge, no baseflow Default = FALSE
-INIT_STATE        
 
 FCAN_SRC				FROM_VEGPARAM   # FROM_VEGPARAM = get variable from vegetation parameter file; Default = FROM_DEFAULT
 LAI_SRC					FROM_VEGPARAM   # FROM_VEGPARAM = get variable from vegetation parameter file; Default = FROM_VEGPARAM

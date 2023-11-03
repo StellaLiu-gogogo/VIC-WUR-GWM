@@ -119,18 +119,3 @@ while current_date < enddate:
         raise SystemExit("Stopping the loop due to failure in VIC execution.")
         # Move to the next date
     current_date += timedelta(month=1)       
-
-
-
-#%% process gwrecharge and discharge to modflow
-# Haochen is taking care of this part
-#%% run modflow
-
-#%% report gwl and baseflow
-
-#%% identify condition 1 2 3? and update soil moisture and add baseflow as extra discharge for next time step's riverrouting
-
-#%% update vic state file
-
-#%% loop to next timestep
-new_startdate = enddate + timedelta(days=1)

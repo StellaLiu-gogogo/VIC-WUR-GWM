@@ -20,17 +20,30 @@ ENDDAY
 BASEFLOW                NIJSSEN2001     
 
 
+=======
+MODEL_STEPS_PER_DAY     1              
+SNOW_STEPS_PER_DAY      1               
+RUNOFF_STEPS_PER_DAY    24             
+ROUT_STEPS_PER_DAY		24				
+WOFOST_STEPS_PER_DAY	1				
+
+STARTYEAR               1968
+STARTMONTH              01
+STARTDAY                01
+ENDYEAR                 1968
+ENDMONTH                01
+ENDDAY                  31
+BASEFLOW                NIJSSEN2001     
+
 #######################################################################
 # Simulation Options
 #######################################################################
 FULL_ENERGY             FALSE           
 SNOW_BAND				FALSE           
 
-
 QUICK_FLUX			    TRUE     		
 EXP_TRANS				FALSE			
 IMPLICIT                FALSE         
-
 
 NBARE                   2               
 GWM                     TRUE            
@@ -51,18 +64,20 @@ WATERUSE				TRUE
 IRRIGATION				TRUE			
 WOFOST					TRUE		    
 
+
 LANDUSE_FORCE           TRUE  
 #FORCE_ROUTING           TRUE
 
 
 POTENTIAL_IRRIGATION    FALSE           
 EFFICIENT_IRRIGATION    FALSE           
+
 OFFSET_IRRIGATION       TRUE            
 PBARE                   21              
 
 REMOTE_WITHDRAWAL       TRUE            
-NONRENEWABLE_WITHDRAWAL TRUE   
 
+NONRENEWABLE_WITHDRAWAL TRUE   
 
 WOFOST_POTENTIAL_IRRIGATION FALSE       
 WOFOST_POTENTIAL_FERTILIZER FALSE       
@@ -71,8 +86,9 @@ WOFOST_DIST_SEASON          TRUE
 WOFOST_DIST_TSUM            TRUE        
 WOFOST_DIST_MINERALIZATION  TRUE        
 WOFOST_CALC_MINERALIZATION  TRUE        
-WOFOST_DIST_FERTILIZER 	    TRUE        
-WOFOST_FORCE_FERTILIZER 	FALSE       
+
+WOFOST_DIST_FERTILIZER 	    TRUE       
+WOFOST_FORCE_FERTILIZER 	FALSE      
 
 #######################################################################
 # State Files and Parameters
@@ -119,8 +135,6 @@ PLUGIN_FORCE_TYPE	  MUN_GROUNDWATER	groundwater         YEAR	/home/sliu/Document
 PLUGIN_FORCE_TYPE	  MUN_CONSUMPTION	consumption         MONTH	/home/sliu/Documents/vic_indus/02Forcing/02HumanImpact/sectoralConsump_monthly_historical_1970_2000/sectoralConsump_monthly_historical_1970_2000_
 #PLUGIN_FORCE_TYPE	  EFR_DISCHARGE		discharge			DAY		/home/sliu/Documents/vic_indus/02Forcing/02HumanImpact/efrDischarge_daily_GFDL-ESM4adj_historical_1970_2000/efrDischarge_daily_GFDL-ESM4adj_historical_1970_2000_
 
-
-
 #######################################################################
 # Land Surface Files and Info
 #######################################################################
@@ -137,7 +151,7 @@ WOFOST_TEXT_PARAMETERS 		/home/sliu/Documents/debg/07OnecellDebug/wofost_params_
 # Output Options
 #######################################################################
 RESULT_DIR						/home/sliu/Documents/gitversion/VIC-WUR-GWM-1910/vic_online/python/output/
-OUTFILE							fluxes_UKESM1-0-LLadj_historical_1970_2000_baseline_human_gwm_
+OUTFILE							 fluxes_UKESM1-0-LLadj_historical_1970_2000_baseline_human_gwm_
 
 OUT_FORMAT						NETCDF4
 COMPRESS						2
