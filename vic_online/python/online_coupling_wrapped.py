@@ -40,6 +40,7 @@ while current_date <= finishdate:
                startstamp, filepath, statefile_dir, 
                configfile_dir, vic_executable)    
     vr.run_vic(vic_executable, config_file, startyear, startmonth)    
+    
    
     
     #vr.PostProcessVIC()  prepare the OUT_GWRECHARGE, OUT_DISCHARGE, and OUT_NON_REN_SECT into modflow input unit conversion
