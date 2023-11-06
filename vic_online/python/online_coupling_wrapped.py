@@ -38,9 +38,7 @@ while current_date <= finishdate:
                init_date, init_datestr, 
                startstamp, filepath, statefile_dir, 
                configfile_dir, vic_executable)    
-    vr.run_vic(vic_executable, config_file, startyear, startmonth)
-    
-    
+    vr.run_vic(vic_executable, config_file, startyear, startmonth)    
     #vr.PostProcessVIC()
     
     #mf.PrepareMF()

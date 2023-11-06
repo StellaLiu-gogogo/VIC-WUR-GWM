@@ -10,31 +10,19 @@ def prepare_vic(startyear, startmonth, startday, endyear, endmonth, endday,
     print("end year, month, day is {},{},{}".format(endyear, endmonth, endday))
     print("statefile wll be save for {},{},{}".format(stateyear, statemonth, stateday))
     prefixes_firststep = {
-    "STARTYEAR": startyear,
-    "STARTMONTH": startmonth,
-    "STARTDAY": startday,
-    "ENDYEAR": endyear,
-    "ENDMONTH": endmonth,
-    "ENDDAY": endday,
+    "STARTYEAR": startyear,    "STARTMONTH": startmonth,    "STARTDAY": startday,
+    "ENDYEAR": endyear,    "ENDMONTH": endmonth,    "ENDDAY": endday,
     "STATENAME":  os.path.join(statefile_dir, "state_file_"),
-    "STATEYEAR": stateyear,
-    "STATEMONTH": statemonth,
-    "STATEDAY": stateday,
-    # Add other prefixes and their corresponding values here
+    "STATEYEAR": stateyear,    "STATEMONTH": statemonth,    "STATEDAY": stateday, 
+    # Add other prefixes and their corresponding values here later if necessary
     }
     prefixes = {
-    "STARTYEAR": startyear,
-    "STARTMONTH": startmonth,
-    "STARTDAY": startday,
-    "ENDYEAR": endyear,
-    "ENDMONTH": endmonth,
-    "ENDDAY": endday,
+    "STARTYEAR": startyear,    "STARTMONTH": startmonth,    "STARTDAY": startday,
+    "ENDYEAR": endyear,    "ENDMONTH": endmonth,    "ENDDAY": endday,
     "INIT_STATE": os.path.join(statefile_dir, f"state_file_.{init_datestr}_00000.nc"),
     "STATENAME":  os.path.join(statefile_dir, "state_file_"),
-    "STATEYEAR": stateyear,
-    "STATEMONTH": statemonth,
-    "STATEDAY": stateday,
-    # Add other prefixes and their corresponding values here
+    "STATEYEAR": stateyear,    "STATEMONTH": statemonth,    "STATEDAY": stateday,
+    # Add other prefixes and their corresponding values here later if necessary
     }
     current_date = datetime(startyear, startmonth, startday)
     # Determine which prefixes to use
@@ -42,7 +30,6 @@ def prepare_vic(startyear, startmonth, startday, endyear, endmonth, endday,
         current_prefixes = prefixes_firststep
     else:
         current_prefixes = prefixes
-
     # Update the prefixes with the current date
     current_prefixes["STARTYEAR"] = startyear
     current_prefixes["STARTMONTH"] = startmonth
@@ -69,6 +56,7 @@ def prepare_vic(startyear, startmonth, startday, endyear, endmonth, endday,
     config_file = os.path.join(configfile_dir, f"config_{startyear}_{startmonth}.txt")
     with open(config_file, 'w') as file:
         file.writelines(lines)
+        
     return config_file
 
 
@@ -78,5 +66,5 @@ def run_vic(vic_executable, config_file, startyear, startmonth):
         subprocess.run(command, check=True, shell=False)
         print("VIC-WUR run successfully for time step [{}-{}]".format(startyear, startmonth))
     except subprocess.CalledProcessError:
-        print("VIC模型运行失败")
-        raise SystemExit("Stopping the loop due to failure in VIC execution.")
+        print("MAYDAY! MAYDAY! MAYDAY! VIC is failing!")
+        raise SystemExit("Stopping the simulation due to failure in VIC execution.")
