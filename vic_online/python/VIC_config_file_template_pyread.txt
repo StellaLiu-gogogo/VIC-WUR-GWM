@@ -159,6 +159,7 @@ HISTFREQ                        NMONTHS 1
 # Water flux
 OUTVAR							OUT_BASEFLOW
 OUTVAR							OUT_RUNOFF
+OUTVAR                          OUT_GWRECHARGE
 # Water state
 OUTVAR							OUT_SOIL_MOIST
 # Water additional
