@@ -25,14 +25,6 @@ RUNOFF_STEPS_PER_DAY    24
 ROUT_STEPS_PER_DAY		24				
 WOFOST_STEPS_PER_DAY	1				
 
-STARTYEAR               1968
-STARTMONTH              01
-STARTDAY                01
-ENDYEAR                 1968
-ENDMONTH                01
-ENDDAY                  31
-BASEFLOW                NIJSSEN2001     
-
 #######################################################################
 # Simulation Options
 #######################################################################
