@@ -5,7 +5,7 @@
       "includePath": [
         "${workspaceFolder}/**"
       ],
-      "compilerPath": "/usr/bin/gcc",
+      "compilerPath": "/home/WUR/liu297/miniconda3/envs/gdb/bin/gdb",
       "cStandard": "${default}",
       "cppStandard": "${default}",
       "intelliSenseMode": "linux-gcc-x64",
