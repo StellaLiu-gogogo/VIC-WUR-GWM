@@ -36,7 +36,7 @@ EXP_TRANS				FALSE
 IMPLICIT                FALSE         
 
 NBARE                   2               
-GWM                     TRUE            
+GWM                     FALSE            
 
 FCAN_SRC				FROM_VEGPARAM   
 LAI_SRC					FROM_VEGPARAM   
