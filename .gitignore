@@ -1,1 +1,5 @@
 /.vscode
+vic_online/python/__pycache__
+vic_online/python/configfile
+vic_online/python/output
+vic_online/python/statefile
