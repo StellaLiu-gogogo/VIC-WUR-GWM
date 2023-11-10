@@ -36,7 +36,7 @@ EXP_TRANS				FALSE
 IMPLICIT                FALSE         
 
 NBARE                   2               
-GWM                     FALSE            
+GWM                     TRUE            
 
 FCAN_SRC				FROM_VEGPARAM   
 LAI_SRC					FROM_VEGPARAM   
@@ -141,7 +141,7 @@ WOFOST_TEXT_PARAMETERS 		/home/sliu/Documents/debg/07OnecellDebug/wofost_params_
 # Output Options
 #######################################################################
 RESULT_DIR						/home/sliu/Documents/gitversion/VIC-WUR-GWM-1910/vic_online/python/output/
-OUTFILE							 fluxes_UKESM1-0-LLadj_historical_1970_2000_baseline_human_gwm_
+OUTFILE							 fluxes_human_impact_
 
 OUT_FORMAT						NETCDF4
 COMPRESS						2

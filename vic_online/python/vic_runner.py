@@ -7,7 +7,6 @@ import config_module
 def prepare_vic(startyear, startmonth, startday, endyear, endmonth, endday, 
             stateyear, statemonth, stateday, init_date, init_datestr,
             config):
-    config = config_module.config()
     print("startyear,month, day is {},{},{}".format(startyear, startmonth, startday))
     print("end year, month, day is {},{},{}".format(endyear, endmonth, endday))
     print("statefile wll be save for {},{},{}".format(stateyear, statemonth, stateday))
@@ -63,7 +62,6 @@ def prepare_vic(startyear, startmonth, startday, endyear, endmonth, endday,
 
 
 def run_vic(config, config_file, startyear, startmonth):
-    config = config_module.config()
     vic_executable = config.vic_executable
     command = [vic_executable, '-g', config_file]
     try:
@@ -72,3 +70,4 @@ def run_vic(config, config_file, startyear, startmonth):
     except subprocess.CalledProcessError:
         print("MAYDAY! MAYDAY! MAYDAY! VIC is failing!")
         raise SystemExit("Stopping the simulation due to failure in VIC execution.")
+    

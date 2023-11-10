@@ -11,7 +11,7 @@ import support_function as sf
 from config_module import config_indus_ubuntu
 
 cwd = '/home/sliu/Documents/gitversion/VIC-WUR-GWM-1910/vic_online/'
-config_indus_ubuntu.set_template_dir(os.path.join(cwd, 'python', 'VIC_config_file_template_pyread.txt'))
+config_indus_ubuntu.set_template_dir(os.path.join(cwd, 'python', 'VIC_config_file_human_impact_template_pyread.txt'))
 config_indus_ubuntu.set_statefile_dir(os.path.join(cwd, 'python', 'statefile'))
 config_indus_ubuntu.set_configfile_dir(os.path.join(cwd, 'python', 'configfile'))
 config_indus_ubuntu.set_vic_executable('/home/sliu/Documents/vic_indus/99SourceCode/VIC-WUR-GWM-1910/vic_offline/drivers/image/vic_image_gwm_offline.exe')
@@ -21,7 +21,7 @@ config_indus_ubuntu.set_startstamp(datetime(1968, 1, 1))
 
 #%%
 current_date = datetime(1968,1,1)
-finishdate = datetime(1975, 12, 31)
+finishdate = datetime(1970, 1, 1)
 
 # Loop over the dates
 while current_date <= finishdate:
@@ -40,9 +40,7 @@ while current_date <= finishdate:
                init_date, init_datestr, 
                config_indus_ubuntu)    
     vr.run_vic(config_indus_ubuntu, config_file, startyear, startmonth)    
-    
-   
-    
+        
     #vr.PostProcessVIC()  prepare the OUT_GWRECHARGE, OUT_DISCHARGE, and OUT_NON_REN_SECT into modflow input unit conversion
     
     #mf.PrepareMF()  prepare other modlofw inputs   finished. 

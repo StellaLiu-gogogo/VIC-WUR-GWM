@@ -5,11 +5,12 @@ from datetime import datetime
 class config:
     def __init__(self):
         self.cwd = '/home/sliu/Documents/gitversion/VIC-WUR-GWM-1910/vic_online/'
-        self.template_dir = os.path.join(self.cwd, 'python', 'VIC_config_file_template_pyread.txt')
+        self.template_dir = os.path.join(self.cwd, 'python', 'VIC_config_file_naturalized_template_pyread_txt')
         self.statefile_dir = os.path.join(self.cwd , 'python', 'statefile')
         self.configfile_dir =  os.path.join(self.cwd , 'python', 'configfile')
         self.vic_executable = '/home/sliu/Documents/vic_indus/99SourceCode/VIC-WUR-GWM-1910/vic_offline/drivers/image/vic_image_gwm_offline.exe'
         self.startstamp =  datetime(1968, 1, 1)
+        self.output_dir = os.path.join(self.cwd, 'python', 'output')
     def set_cwd(self, cwd):
         self.cwd = cwd  
     def set_template_dir(self, template_dir):
@@ -22,6 +23,8 @@ class config:
         self.vic_executable = vic_executable
     def set_startstamp(self, startstamp):
         self.startstamp = startstamp
+    def set_output_dir(self, output_dir):
+        self.output_dir = output_dir
 
 
 config_indus_ubuntu = config()

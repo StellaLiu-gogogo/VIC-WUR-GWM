@@ -2,6 +2,7 @@
 import os 
 import flopy
 import numpy as np
+import xarray as xr
 import netCDF4 as nc
 import subprocess  # for calling shell commands
 from datetime import datetime, timedelta
@@ -9,49 +10,73 @@ from dateutil.relativedelta import relativedelta
 import calendar
 import vic_runner as vr
 import support_function as sf
+from config_module import config_indus_ubuntu
+
+cwd = '/home/sliu/Documents/gitversion/VIC-WUR-GWM-1910/vic_online/'
+config_indus_ubuntu.set_template_dir(os.path.join(cwd, 'python', 'VIC_config_file_human_impact_template_pyread.txt'))
+config_indus_ubuntu.set_statefile_dir(os.path.join(cwd, 'python', 'statefile'))
+config_indus_ubuntu.set_configfile_dir(os.path.join(cwd, 'python', 'configfile'))
+config_indus_ubuntu.set_vic_executable('/home/sliu/Documents/vic_indus/99SourceCode/VIC-WUR-GWM-1910/vic_offline/drivers/image/vic_image_gwm_offline.exe')
+config_indus_ubuntu.set_startstamp(datetime(1968, 1, 1))
+
+
 
 #%%
-
-cwd = '/home/sliu/Documents/gitversion/VIC-WUR-GWM-1910/vic_online'
-os.chdir(cwd)
-filepath = os.path.join(cwd, 'python', 'VIC_config_file_template_pyread.txt')
-statefile_dir = os.path.join(cwd, 'python', 'statefile')  #may change later 
-configfile_dir = os.path.join(cwd, 'python', 'configfile')  #may change later
-
-vic_executable = '/home/sliu/Documents/vic_indus/99SourceCode/VIC-WUR-GWM-1910/vic_offline/drivers/image/vic_image_gwm_offline.exe'
-vic_outdir = '/home/sliu/Documents/gitversion/VIC-WUR-GWM-1910/vic_online/python/output/' 
-#this later must be updated and changed to somewhere better. 
-
-#%%
-startstamp = datetime(1968, 1, 1)
-current_date = datetime(1968,1,1)
+current_date = datetime(1968,2,1)
 finishdate = datetime(1975, 12, 31)
 
 # Loop over the dates
-
 print("Running VIC for the time step [{}-{}]".format(current_date.year, current_date.month))
 #generate dmy for VIC run
-(startyear , startmonth , startday,
-endyear , endmonth , endday, 
-stateyear , statemonth , stateday, 
-init_date , init_datestr) = sf.prepare_dates(current_date)   
+startyear, startmonth, startday = sf.startdate(current_date)
+endyear, endmonth, endday = sf.enddate(current_date)
+stateyear, statemonth, stateday = sf.statefiledate(current_date)
+init_date,init_datestr = sf.init_datestr(current_date)
+#%%
         
 # prepare VIC config file
-#config_file = vr.prepare_vic(startyear, startmonth, startday, 
-#            endyear, endmonth, endday, 
-#            stateyear, statemonth, stateday, 
-#            init_date, init_datestr, 
-#            startstamp, filepath, statefile_dir, 
-#            configfile_dir, vic_executable)    
-#vr.run_vic(vic_executable, config_file, startyear, startmonth)    
-# read the vic output netcdf file
-vic_output = nc.Dataset(os.path.join(vic_outdir, 
-                                        'fluxes_UKESM1-0-LLadj_historical_1970_2000_baseline_human_gwm_.{}-{:02d}.nc'.format(startyear, startmonth)))
-day_num = calendar.monthrange(startyear, startmonth)[1]
-surf_discharge = day_num/86400*vic_output.variables['OUT_DISCHARGE'][:,:,:]
+config_file = vr.prepare_vic(startyear, startmonth, startday, 
+            endyear, endmonth, endday, 
+            stateyear, statemonth, stateday, 
+            init_date, init_datestr, 
+            config_indus_ubuntu)    
 
-avg_surf_discharge = np.mean(vic_output.variables['OUT_DISCHARGE'][:,:,:])
-#Keep writing the PostProcessVIC() unwrapped version:
+vr.run_vic(config_indus_ubuntu, config_file, startyear, startmonth)    
 
+#%%   
+output_dir = config_indus_ubuntu.output_dir
+output_file = os.path.join(output_dir, f"fluxes_human_impact_.{startyear}-{startmonth:02d}.nc")
+
+vicout = nc.Dataset(output_file)
+vicout.variables.keys()
+
+# check if there is no baseflow reported, aka, only gwrecharge is reported. 
+if vicout.variables['OUT_BASEFLOW'][:,:,:].sum() == 0:
+    print("baseflow is all 0")
+else:
+    #stop the program
+    print("there is baseflow reported while GWM options == true")
+    print("program will be stopped, please check the VIC configuration file")
+    exit()
+gwrecharge = vicout.variables['OUT_GWRECHARGE'][:,:,:]
+#mf.PrepareMF()  prepare other modlofw inputs   finished. 
+
+#mf.RunMF() basically is already there
+
+#mf.PostProcessMF() 
+    #1. prepare GWD data to identfy conditon of GWD and VIC soil layer depth
     
-# %%
+    #2. export Baseflow data from Water Budget output, save it as a netcdf file for VIC to read in the next time step
+
+#mf.Feedback2VIC()
+    #1. read the current soil moisture and update it based on the condition. 
+
+#vr.update_statefile()
+    #1. update the statefile's soil moisture for the next time step. 
+
+#move to next time step
+current_date += relativedelta(months=1)
+
+
+
+#%%
