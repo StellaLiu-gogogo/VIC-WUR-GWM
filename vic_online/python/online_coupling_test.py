@@ -4,6 +4,7 @@ import flopy
 import numpy as np
 import xarray as xr
 import netCDF4 as nc
+
 import subprocess  # for calling shell commands
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
@@ -18,8 +19,8 @@ config_indus_ubuntu.set_statefile_dir(os.path.join(cwd, 'python', 'statefile'))
 config_indus_ubuntu.set_configfile_dir(os.path.join(cwd, 'python', 'configfile'))
 config_indus_ubuntu.set_vic_executable('/home/sliu/Documents/vic_indus/99SourceCode/VIC-WUR-GWM-1910/vic_offline/drivers/image/vic_image_gwm_offline.exe')
 config_indus_ubuntu.set_startstamp(datetime(1968, 1, 1))
-
-
+config_indus_ubuntu.set_mfinput_dir(os.path.join(cwd, 'python', 'mfinput'))
+humanimpact = False
 
 #%%
 current_date = datetime(1968,2,1)
@@ -58,7 +59,24 @@ else:
     print("there is baseflow reported while GWM options == true")
     print("program will be stopped, please check the VIC configuration file")
     exit()
-gwrecharge = vicout.variables['OUT_GWRECHARGE'][:,:,:]
+#%%
+#try:
+ #   from osgeo import gdal
+#except ImportError:
+#    import gdal
+gwrecharge_mf = np.flip(vicout.variables['OUT_GWRECHARGE'][0,:,:],0)  # flip the matrix to match the mf input
+surfQ_mf = np.flip(vicout.variables['OUT_DISCHARGE'][0,:,:],0)  # flip the matrix to match the mf input
+if humanimpact ==True:
+    gwdemand= np.sum(np.flip(vicout.variables['OUT_WI_NREN_SECT'][0,:,:,:],1),axis =0)  # flip the matrix to match the mf input
+   # cell_area = gdal.Open(os.path.join(config_indus_ubuntu.mfinput_dir,'indus_Indus_CellArea_m2_05min.nc')).ReadAsArray()
+
+
+#%%
+plt.imshow(np.ma.getmask(gwrecharge_mf)[:,:])
+plt.colorbar()
+plt.show()
+
+
 #mf.PrepareMF()  prepare other modlofw inputs   finished. 
 
 #mf.RunMF() basically is already there
@@ -77,6 +95,4 @@ gwrecharge = vicout.variables['OUT_GWRECHARGE'][:,:,:]
 #move to next time step
 current_date += relativedelta(months=1)
 
-
-
-#%%
+# %%

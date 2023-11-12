@@ -10,6 +10,7 @@ class config:
         self.configfile_dir =  os.path.join(self.cwd , 'python', 'configfile')
         self.vic_executable = '/home/sliu/Documents/vic_indus/99SourceCode/VIC-WUR-GWM-1910/vic_offline/drivers/image/vic_image_gwm_offline.exe'
         self.startstamp =  datetime(1968, 1, 1)
+        self.mfinput_dir = os.path.join(self.cwd, 'python', 'mfinput')
         self.output_dir = os.path.join(self.cwd, 'python', 'output')
     def set_cwd(self, cwd):
         self.cwd = cwd  
@@ -25,6 +26,8 @@ class config:
         self.startstamp = startstamp
     def set_output_dir(self, output_dir):
         self.output_dir = output_dir
+    def set_mfinput_dir(self, mfinput_dir):
+        self.mfinput_dir = mfinput_dir
 
 
 config_indus_ubuntu = config()
