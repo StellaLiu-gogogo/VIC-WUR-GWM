@@ -4,11 +4,11 @@ import os
 from datetime import datetime 
 class config:
     def __init__(self):
-        self.cwd = '/home/sliu/Documents/gitversion/VIC-WUR-GWM-1910/vic_online/'
+        self.cwd = '/lustre/nobackup/WUR/ESG/liu297/gitrepo/VIC-WUR-GWM-1910/vic_online/'
         self.template_dir = os.path.join(self.cwd, 'python', 'VIC_config_file_naturalized_template_pyread_txt')
         self.statefile_dir = os.path.join(self.cwd , 'python', 'statefile')
         self.configfile_dir =  os.path.join(self.cwd , 'python', 'configfile')
-        self.vic_executable = '/home/sliu/Documents/vic_indus/99SourceCode/VIC-WUR-GWM-1910/vic_offline/drivers/image/vic_image_gwm_offline.exe'
+        self.vic_executable = '/lustre/nobackup/WUR/ESG/liu297/vic_indus/11indus_run/99vic_offline_src/drivers/image/vic_image_gwm.exe'
         self.startstamp =  datetime(1968, 1, 1)
         self.mfinput_dir = os.path.join(self.cwd, 'python', 'mfinput')
         self.output_dir = os.path.join(self.cwd, 'python', 'output')

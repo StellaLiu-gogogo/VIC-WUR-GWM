@@ -63,11 +63,24 @@ def prepare_vic(startyear, startmonth, startday, endyear, endmonth, endday,
 
 def run_vic(config, config_file, startyear, startmonth):
     vic_executable = config.vic_executable
-    command = [vic_executable, '-g', config_file]
+    # first load the netcdf module
+    #command0 = ['module load netcdf']
+    #command = [vic_executable, '-g', config_file]
+    #process = subprocess.Popen(command0, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    # Get the output and errors
+    #stdout, stderr = process.communicate()
+
+    #if process.returncode != 0:
+    #    print(f'Error: {stderr.decode()}')
+    #else:
+    #    print(f'Success: {stdout.decode()}')
+    
+    
+    
     try:
-        subprocess.run(command, check=True, shell=False)
+        command = 'bash -c "module load netcdf; {} -g {}"'.format(vic_executable, config_file)
+        subprocess.run(command, check=True, shell=True)
         print("VIC-WUR run successfully for time step [{}-{}]".format(startyear, startmonth))
     except subprocess.CalledProcessError:
-        print("MAYDAY! MAYDAY! MAYDAY! VIC is failing!")
         raise SystemExit("Stopping the simulation due to failure in VIC execution.")
     

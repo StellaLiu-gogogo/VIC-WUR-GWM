@@ -13,17 +13,29 @@ import vic_runner as vr
 import support_function as sf
 from config_module import config_indus_ubuntu
 
-cwd = '/home/sliu/Documents/gitversion/VIC-WUR-GWM-1910/vic_online/'
-config_indus_ubuntu.set_template_dir(os.path.join(cwd, 'python', 'VIC_config_file_human_impact_template_pyread.txt'))
+#cwd = '/home/sliu/Documents/gitversion/VIC-WUR-GWM-1910/vic_online/'
+#config_indus_ubuntu.set_template_dir(os.path.join(cwd, 'python', 'VIC_config_file_human_impact_template_pyread.txt'))
+#config_indus_ubuntu.set_statefile_dir(os.path.join(cwd, 'python', 'statefile'))
+#config_indus_ubuntu.set_configfile_dir(os.path.join(cwd, 'python', 'configfile'))
+#config_indus_ubuntu.set_vic_executable('/home/sliu/Documents/vic_indus/99SourceCode/VIC-WUR-GWM-1910/vic_offline/drivers/image/vic_image_gwm_offline.exe')
+#config_indus_ubuntu.set_startstamp(datetime(1968, 1, 1))
+#config_indus_ubuntu.set_mfinput_dir(os.path.join(cwd, 'python', 'mfinput'))
+#humanimpact = False
+
+cwd = '/lustre/nobackup/WUR/ESG/liu297/gitrepo/VIC-WUR-GWM-1910/vic_online/'
+config_indus_ubuntu.set_template_dir(os.path.join(cwd, 'python', 'VIC_config_file_naturalized_template_pyread_anunna.txt'))
 config_indus_ubuntu.set_statefile_dir(os.path.join(cwd, 'python', 'statefile'))
 config_indus_ubuntu.set_configfile_dir(os.path.join(cwd, 'python', 'configfile'))
-config_indus_ubuntu.set_vic_executable('/home/sliu/Documents/vic_indus/99SourceCode/VIC-WUR-GWM-1910/vic_offline/drivers/image/vic_image_gwm_offline.exe')
+config_indus_ubuntu.set_vic_executable('/lustre/nobackup/WUR/ESG/liu297/vic_indus/11indus_run/99vic_offline_src/drivers/image/vic_image_gwm.exe')
 config_indus_ubuntu.set_startstamp(datetime(1968, 1, 1))
 config_indus_ubuntu.set_mfinput_dir(os.path.join(cwd, 'python', 'mfinput'))
 humanimpact = False
 
+
+
+
 #%%
-current_date = datetime(1968,2,1)
+current_date = datetime(1968,1,1)
 finishdate = datetime(1975, 12, 31)
 
 # Loop over the dates
@@ -72,9 +84,9 @@ if humanimpact ==True:
 
 
 #%%
-plt.imshow(np.ma.getmask(gwrecharge_mf)[:,:])
-plt.colorbar()
-plt.show()
+#plt.imshow(np.ma.getmask(gwrecharge_mf)[:,:])
+#plt.colorbar()
+#plt.show()
 
 
 #mf.PrepareMF()  prepare other modlofw inputs   finished. 
