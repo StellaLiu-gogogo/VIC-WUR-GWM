@@ -1,9 +1,11 @@
+#%%
 from os.path import join
 import os
+os.chdir('/lustre/nobackup/WUR/ESG/liu297/gitrepo/VIC-WUR-GWM-1910/vic_online/python')
 import subprocess
 from datetime import datetime, timedelta
 import config_module
-
+#%%
 def prepare_vic(startyear, startmonth, startday, endyear, endmonth, endday, 
             stateyear, statemonth, stateday, init_date, init_datestr,
             config):
@@ -60,27 +62,41 @@ def prepare_vic(startyear, startmonth, startday, endyear, endmonth, endday,
         
     return config_file
 
-
+#%%
 def run_vic(config, config_file, startyear, startmonth):
     vic_executable = config.vic_executable
-    # first load the netcdf module
-    #command0 = ['module load netcdf']
-    #command = [vic_executable, '-g', config_file]
-    #process = subprocess.Popen(command0, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    # Get the output and errors
-    #stdout, stderr = process.communicate()
-
-    #if process.returncode != 0:
-    #    print(f'Error: {stderr.decode()}')
-    #else:
-    #    print(f'Success: {stdout.decode()}')
-    
-    
-    
+  
     try:
-        command = 'bash -c "module load netcdf; {} -g {}"'.format(vic_executable, config_file)
+        command = 'bash -c "{} -g {}"'.format(vic_executable, config_file)
         subprocess.run(command, check=True, shell=True)
         print("VIC-WUR run successfully for time step [{}-{}]".format(startyear, startmonth))
     except subprocess.CalledProcessError:
         raise SystemExit("Stopping the simulation due to failure in VIC execution.")
+#%%    
+def vic_postprocess(config, startyear, startmonth):
+    # Read the VIC output
+    if config.humanimpact:
+        human_or_nat = "human"
+    else:
+        human_or_nat = "naturalized"
+    output_dir = config.output_dir
+    output_file = os.path.join(output_dir, f"fluxes_{human_or_nat}_gwm_.{startyear}-{startmonth:02d}.nc")
+    vicout = nc.Dataset(output_file, 'r')
+    print('Do a check if it is a coupling run(check if there is baseflow reported from VIC:)')
+    if vicout.variables['OUT_BASEFLOW'][:,:,:].sum() == 0:
+        print("baseflow is all 0")
+    else:
+    #stop the program
+        print("there is baseflow reported,probably means it is not a coupling run, GWM.options is set incorrectly.")
+        print("program will be stopped, please check the VIC configuration file")
+        exit()   
     
+    ts_gwrecharge = vicout.variables['OUT_GWRECHARGE'][:,:,:] /1000 # mm/day to m/day
+    ts_discharge = vicout.variables['OUT_DISCHARGE'][:,:,:]  # keep it as m3/s
+    if config.humanimpact: 
+        ts_gwabstract = np.zeros_like(ts_gwrecharge) #TODO add process abstraction
+    else:
+        ts_gwabstract = np.zeros_like(ts_gwrecharge)
+    
+    return ts_gwrecharge, ts_discharge, ts_gwabstract
+# %%

@@ -1,7 +1,11 @@
 #%%
 import os 
+import sys
+sys.path.append('/lustre/nobackup/WUR/ESG/liu297/gitrepo/VIC-WUR-GWM-1910/vic_online/python')
 import flopy
 import numpy as np
+import xarray as xr
+import netCDF4 as nc
 import subprocess  # for calling shell commands
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
@@ -9,19 +13,25 @@ import calendar
 import vic_runner as vr
 import support_function as sf
 from config_module import config_indus_ubuntu
+from osgeo import gdal
+from netCDF4 import Dataset, date2num
+from matplotlib import pyplot as plt
+%env LD_LIBRARY_PATH=/shared/legacyapps/netcdf/gcc/64/4.6.1/lib:$LD_LIBRARY_PATH   
 
-cwd = '/home/sliu/Documents/gitversion/VIC-WUR-GWM-1910/vic_online/'
-config_indus_ubuntu.set_template_dir(os.path.join(cwd, 'python', 'VIC_config_file_human_impact_template_pyread.txt'))
+cwd = '/lustre/nobackup/WUR/ESG/liu297/gitrepo/VIC-WUR-GWM-1910/vic_online/'
+config_indus_ubuntu.set_template_dir(os.path.join(cwd, 'python', 'VIC_config_file_naturalized_template_pyread_anunna.txt'))
 config_indus_ubuntu.set_statefile_dir(os.path.join(cwd, 'python', 'statefile'))
 config_indus_ubuntu.set_configfile_dir(os.path.join(cwd, 'python', 'configfile'))
-config_indus_ubuntu.set_vic_executable('/home/sliu/Documents/vic_indus/99SourceCode/VIC-WUR-GWM-1910/vic_offline/drivers/image/vic_image_gwm_offline.exe')
+config_indus_ubuntu.set_vic_executable('/lustre/nobackup/WUR/ESG/liu297/vic_indus/11indus_run/99vic_offline_src/drivers/image/vic_image_gwm.exe')
 config_indus_ubuntu.set_startstamp(datetime(1968, 1, 1))
-
+config_indus_ubuntu.set_mfinput_dir('/lustre/nobackup/WUR/ESG/yuan018/04Input_Indus/')
+config_indus_ubuntu.set_mfoutput_dir('/lustre/nobackup/WUR/ESG/liu297/gitrepo/VIC-WUR-GWM-1910/vic_online/python/mfoutput/workspace/')
+config_indus_ubuntu.set_humanimpact(False)
 
 
 #%%
 current_date = datetime(1968,1,1)
-finishdate = datetime(1970, 1, 1)
+finishdate = datetime(1968, 2, 1)
 
 # Loop over the dates
 while current_date <= finishdate:
@@ -41,11 +51,9 @@ while current_date <= finishdate:
                config_indus_ubuntu)    
     vr.run_vic(config_indus_ubuntu, config_file, startyear, startmonth)    
         
-    #vr.PostProcessVIC()  prepare the OUT_GWRECHARGE, OUT_DISCHARGE, and OUT_NON_REN_SECT into modflow input unit conversion
+    ts_gwrecharge, ts_discharge, ts_gwabstract = vr.PostProcessVIC() # read VIC output and prepare for MODFLOW input
     
-    #mf.PrepareMF()  prepare other modlofw inputs   finished. 
-    
-    #mf.RunMF() basically is already there
+    ts_gwhead, ts_baseflow = 
     
     #mf.PostProcessMF() 
         #1. prepare GWD data to identfy conditon of GWD and VIC soil layer depth

@@ -1,46 +1,54 @@
 #%%
-import numpy as np
-import netCDF4 as nc
-import os
 os.chdir('/lustre/nobackup/WUR/ESG/liu297/gitrepo/VIC-WUR-GWM-1910/vic_online/python')
-from osgeo import gdal
+import os
+import numpy as np
 import flopy
-import calendar
-from datetime import datetime,timedelta
+import pandas as pd
+import netCDF4 as nc
+import xarray as xr
+import subprocess  # for calling shell commands
+from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
-from netCDF4 import Dataset, date2num
-import vic_runner as vr
+import calendar
 import support_function as sf
-from config_module import config_indus_ubuntu as mfinput
+from config_module import config_indus_ubuntu
 from osgeo import gdal
 from netCDF4 import Dataset, date2num
 from matplotlib import pyplot as plt
-
-#%% test block
-current_date = datetime(1968,1,1)  # this should be the input transfered from the main script TODO: change this after wrapping up
-missingvalue = mfinput.missingvalue #taking the missing value as a variable.
-
 #%%
-def online_cp_stress_period_data(current_date):
-    #count how many days in this month
-    _, days = calendar.monthrange(current_date.year, current_date.month)
-    nstp, tsmult = 1, 1
-    perioddata = [days,nstp,tsmult]
-    return perioddata
 
-perioddata = online_cp_stress_period_data(current_date)
+
+class mfinput:
+    def __init__(self):
+
+    
+qbank = mfinput().qbank
 #%%
-def dis_ic_parameter(config):
-    mfinput = config()
-    aqdepth = mfinput.cal_aqdepth()
-    
-       
-    
-    
+def stress_period_data(startdate,enddate):
 
-    
+    start_date = datetime.strptime(startdate, '%Y-%m-%d')  # start date
+    end_date = datetime.strptime(enddate, '%Y-%m-%d')  # end data
+    totalsp = (end_date.year - start_date.year) * 12 + end_date.month - start_date.month  # calculate stress period, in this sm: 395
+    month_lengths = []
+    sp_date = []
+    current_date = start_date
+    while current_date <= end_date:
+        year = current_date.year
+        month = current_date.month
+        _, num_days = calendar.monthrange(year, month)
+        last_day = datetime(year,month,num_days)
+        month_lengths.append(num_days)
+        sp_date.append(last_day.strftime('%Y-%m-%d'))
+        #update to next date
+        current_date = last_day + timedelta(days=1)
+        
+    nstp = 1 # number of timesteps per stress period
+    tsmult = 1 # timestep multiplier
+    perioddata = [(days,nstp,tsmult) for days in month_lengths] #a list containing the period length for all stress period
+    sp = list(range(totalsp+1)) # list(396)
+    return sp, sp_date, perioddata
 
-#%%
+sp, sp_date,perioddata = stress_period_data('1968-01-01','1968-03-01') # format are all xxxx-xx-01，here is until 2000-12-31 (but write -01) TODO
 
 def dis_ic_parameter():
     global aqdepth, topl2,Nlay,Nrow,Ncol,delrow,delcol,botm,startinghead
@@ -333,8 +341,8 @@ for stress_period,date in zip(sp, sp_date):
         gwf,stress_period_data=RCHstress_period_data)
     riv = flopy.mf6.ModflowGwfriv(
         gwf,stress_period_data= RIVstress_period_data)
-    saverecord = [("HEAD", "ALL"), ("BUDGET", "ALL")]
-    printrecord = [("HEAD", "ALL"), ("BUDGET", "ALL")]
+    saverecord = [("HEAD", "ALL")]
+    printrecord = [("HEAD", "ALL")]
     headfile = "{}_{}.hds".format(name,date)
     head_filerecord = [headfile]
     budgetfile = "{}.cbb".format(name)
