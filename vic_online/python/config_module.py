@@ -121,24 +121,22 @@ class Pathconfig:
     def set_qbank(self, qbank):
         self.qbank = qbank
     
-
-    
-#%% 
 class config:
     def __init__(self): #without specifying the input, the default input will be used as below: 
         self.paths = Pathconfig()
         self.startstamp =  datetime(1968, 1, 1)
-        self.ts_gwrecharge = gdal.Open(self.paths.mfinput_dir+'gwRecharge_month_1968to2000.nc').ReadAsArray() 
+        self.ts_gwrecharge = gdal.Open(self.paths.mfinput_dir+'gwRecharge_month_1968to2000.nc').ReadAsArray()[0,:,:]  #TODO: change this 
         self.bdmask = self.paths.nc_boundary.variables['idomain'][:].data 
         self.humanimpact = False
         
         #from here on are some derived variables based on the variables above:
         self.missingvalue = self.paths.aqdepth_ini[0][0] 
+        self.rcmissingvalue = self.ts_gwrecharge[179][0]
         self.idomain = self.paths.bdmask.astype(int)
         self.Nlay = 2  # number of layers in modflow
         self.Nrow, self.Ncol = self.paths.bdmask.shape  # number of rows and columns in modflow
-        self.delrow = self.paths.clonemap.GeoGeoTransform()[1]*111*1000 # cell size in y direction in modflow
-        self.delcol = self.paths.clonemap.GeoGeoTransform()[5]*111*1000 # cell size in x direction in modflow
+        self.delrow = self.paths.clonemap.GetGeoTransform()[1]*111*1000 # cell size in y direction in modflow
+        self.delcol = self.paths.clonemap.GetGeoTransform()[5]*111*1000 # cell size in x direction in modflow
 
             
     def set_humanimpact(self, humanimpact): # whether to vic simulation options for human impact is turned on
@@ -168,24 +166,88 @@ class config:
         bot_layer2 = np.where(bot_layer2==self.missingvalue, -200 ,bot_layer2)
         self.botm = [bot_layer1, bot_layer2]
         return self.botm
-    def initial_head(self): #this is only for the first time step. 
-        startinghead_layer1 = self.paths.gwll2[0]  
-        startinghead_layer2 = self.paths.gwll1[0]    #why 
-        
-        initial_head = [startinghead_layer1, startinghead_layer2]
+    def get_initial_head(self): #this is only for the first time step. 
+        startinghead_layer1 = self.paths.gwll1[0]  
+        startinghead_layer2 = self.paths.gwll2[0]   
+        self.initial_head = [startinghead_layer1, startinghead_layer2]
         return self.initial_head
     
-    
-
-        
+    def get_npf_param(self): 
+        if not hasattr(self, 'aqdepth'): # lazy loading/ on demand loading
+            self.cal_aqdepth()        
+        rho_water,miu_water,g_gravity = 1000,0.001,9.81
+        dikte_l1_ini = self.aqdepth *0.1  #top layer
+        dikte_l2_ini = self.aqdepth -dikte_l1_ini  #bottom layer
+        dikte_l1= dikte_l1_ini.copy() 
+        dikte_l1[self.bdmask == -1] = self.missingvalue
+        dikte_l1[self.bdmask == 0] = self.missingvalue
+        dikte_l1[self.bdmask == -2] = self.missingvalue
+        dikte_l2 = dikte_l2_ini.copy()
+        dikte_l2[self.bdmask == -1] = self.missingvalue
+        dikte_l2[self.bdmask == 0] = self.missingvalue
+        dikte_l2[self.bdmask == -2] = self.missingvalue
+        conflayers =  np.where(self.paths.conflayers !=1, 0, self.paths.conflayers)  
+        ksat_inp = rho_water * (10 ** self.paths.ksat_log) * (g_gravity / miu_water) * 24.0 * 3600.0
+        ksat_l2_conf=rho_water* (10**self.paths.ksat_l2_conf_log)* (g_gravity/ miu_water) *24.0 *3600.0 # coarse grained
+        ksat_l1_conf=rho_water* (10**self.paths.ksat_l1_conf_log)* (g_gravity/ miu_water) *24.0 *3600.0 # fine grained
+        khoriz_l2_ini = np.where(ksat_l2_conf != 0, ksat_l2_conf, ksat_inp)
+        khoriz_l1_ini =	np.where(ksat_l1_conf != 0, ksat_l1_conf, ksat_inp)
+        khoriz_l2_ini = np.clip(khoriz_l2_ini,a_min = 0.01, a_max = None)
+        khoriz_l1_ini = np.clip(khoriz_l1_ini,a_min = 0.01, a_max = None)  
+        kvert_l1_ini = np.where(khoriz_l1_ini >-999,khoriz_l1_ini*self.paths.cellarea/(self.delcol*self.delrow), (10.0*self.paths.cellarea/(self.delcol*self.delrow)))
+        kvert_l2 = np.where(khoriz_l2_ini>-999, (10.0*self.paths.cellarea/(self.delcol*self.delrow)),(10.0*self.paths.cellarea/(self.delcol*self.delrow)))
+        kvert_l1 = np.maximum(dikte_l1/5000,kvert_l1_ini)
+        kd_l1_ini = khoriz_l1_ini.astype(np.float128)*(dikte_l1).astype(np.float128)
+        kd_l2_ini = khoriz_l2_ini.astype(np.float128)*(dikte_l2).astype(np.float128)
+        kd_l1 = np.maximum(30,kd_l1_ini)
+        kd_l2 = np.maximum(30,kd_l2_ini)
+        khoriz_l1 = kd_l1/dikte_l1
+        khoriz_l2 = kd_l2/dikte_l2
+        khoriz_l1[khoriz_l1<0]  = 20
+        khoriz_l2[khoriz_l2<0]  = 190
+        kvert_l1[kvert_l1<0] = 1e10
+        kvert_l2[kvert_l2<0] = 1e10
+        k_hor = [khoriz_l1, khoriz_l2]
+        k_ver = [khoriz_l1*0.1,khoriz_l2*0.1]    
+        spe_yi_inp = self.paths.spe_yi_inp
+        spe_yi_inp = np.where(self.bdmask >=1, spe_yi_inp,self.missingvalue)
+        spe_yi_inp = np.maximum(0.01,spe_yi_inp)
+        spe_yi_inp = np.minimum(1,spe_yi_inp)
+        spe_yi_inp = np.where(self.aqdepth >-999.9,np.maximum(spe_yi_inp, 0.11),spe_yi_inp)
+        stor_prim = spe_yi_inp
+        stor_sec = spe_yi_inp
+        stor=[stor_prim,stor_prim]
+        return k_hor,k_ver,stor
+    def get_rch_param(self):
+        rch_nat = self.ts_gwrecharge
+        rch_nat[self.paths.bdmask == 2 & (rch_nat ==self.rcmissingvalue)] = 0
+        recharge_inp = ((rch_nat/(1000*365)*self.paths.cellarea)/(self.delcol*self.delrow))
+        recharge_inp = np.where(recharge_inp < 10000, recharge_inp, 0)
+        npzero = np.zeros_like(recharge_inp)
+        # recharge on the top layer    
+        recharge_inp = np.maximum(recharge_inp,npzero)
+        # recharge_inp[idomain == -1]=np.nan
+        recharge_inp[self.idomain == -1]=0
+        recharge_inp[self.idomain == -2]=0
+        recharge_inp[self.idomain == 0]=np.nan
+        nrow, ncol = recharge_inp.shape
+        cellids = [(0, i, j) for i in range(nrow) for j in range(ncol)]
+        # Create stress_period_data as a list of lists (leave it for mf6)
+        RCHstress_period_data = []
+        for cellid, value, bdmask_ind in zip(cellids, recharge_inp.flatten(), self.paths.bdmask.flatten()):
+            if np.isnan(value) or value ==0 or bdmask_ind != 2:
+            # if np.isnan(value) or value ==0:
+                continue
+            cellid_1, cellid_2, cellid_3 = cellid
+            RCHstress_period_data.append([cellid_1, cellid_2, cellid_3, value])
+        return RCHstress_period_data
 
 #%%
 config_indus_ubuntu = config()
 
-top_layer1 = config_indus_ubuntu.cal_toplayer_elevation()
-aqdepth = config_indus_ubuntu.cal_aqdepth()
-botm = config_indus_ubuntu.cal_botlayer_elevation()
 
+k_hot,k_ver,stor = config_indus_ubuntu.get_npf_param()
+RCHstress_period_data = config_indus_ubuntu.get_rch_param()
 
 #%%
 

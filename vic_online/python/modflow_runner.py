@@ -99,44 +99,77 @@ Nlay,Nrow,Ncol,delrow,delcol,topl2,botm = dis_ic_parameter()
 def npf_parameter():
     global aqdepth,delcol,delrow,spe_yi_inp
     rho_water,miu_water,g_gravity = 1000,0.001,9.81
-    dikte_l2_ini = aqdepth *0.1  #top layer
-    dikte_l1_ini = aqdepth -dikte_l2_ini  #bottom layer
-    dikte_l2= dikte_l2_ini.copy() 
-    # dikte_l2[landmask ==0] = missingvalue
-    dikte_l2[bdmask == -1] = missingvalue # TODO
-    dikte_l2[bdmask == 0] = missingvalue
-    dikte_l2[bdmask == -2] = missingvalue
-    dikte_l1 = dikte_l1_ini.copy()
-    # dikte_l1[landmask == 0] = missingvalue
+    dikte_l1_ini = aqdepth *0.1  #top layer
+    dikte_l2_ini = aqdepth -dikte_l1_ini  #bottom layer
+    dikte_l1= dikte_l1_ini.copy() 
     dikte_l1[bdmask == -1] = missingvalue
     dikte_l1[bdmask == 0] = missingvalue
     dikte_l1[bdmask == -2] = missingvalue
+    dikte_l2 = dikte_l2_ini.copy()
+    dikte_l2[bdmask == -1] = missingvalue
+    dikte_l2[bdmask == 0] = missingvalue
+    dikte_l2[bdmask == -2] = missingvalue
+    
+    
+    # dikte_l2_ini = aqdepth *0.1  #top layer
+    # dikte_l1_ini = aqdepth -dikte_l2_ini  #bottom layer
+    # dikte_l2= dikte_l2_ini.copy() 
+    # dikte_l2[landmask ==0] = missingvalue
+    # dikte_l2[bdmask == -1] = missingvalue # TODO
+    # dikte_l2[bdmask == 0] = missingvalue
+    # dikte_l2[bdmask == -2] = missingvalue
+    # dikte_l1 = dikte_l1_ini.copy()
+    # dikte_l1[landmask == 0] = missingvalue
+    # dikte_l1[bdmask == -1] = missingvalue
+    # dikte_l1[bdmask == 0] = missingvalue
+    # dikte_l1[bdmask == -2] = missingvalue
     conflayers[conflayers !=1 ]  = 0 
     #k for no confining layer area:
     ksat_inp = rho_water * (10 ** ksat_log) * (g_gravity / miu_water) * 24.0 * 3600.0
     # k for confining layer area:
-    ksat_l1_conf=rho_water* (10**ksat_l1_conf_log)* (g_gravity/ miu_water) *24.0 *3600.0# fine grained
-    ksat_l2_conf=rho_water* (10**ksat_l2_conf_log)* (g_gravity/ miu_water) *24.0 *3600.0# coarse grained
-    khoriz_l1_ini = np.where(ksat_l1_conf != 0, ksat_l1_conf, ksat_inp)
-    khoriz_l2_ini =	np.where(ksat_l2_conf != 0, ksat_l2_conf, ksat_inp)
-    khoriz_l1_ini = np.clip(khoriz_l1_ini,a_min = 0.01, a_max = None)
+    ksat_l2_conf=rho_water* (10**ksat_l2_conf_log)* (g_gravity/ miu_water) *24.0 *3600.0 # coarse grained
+    ksat_l1_conf=rho_water* (10**ksat_l1_conf_log)* (g_gravity/ miu_water) *24.0 *3600.0 # fine grained
+    khoriz_l2_ini = np.where(ksat_l2_conf != 0, ksat_l2_conf, ksat_inp)
+    khoriz_l1_ini =	np.where(ksat_l1_conf != 0, ksat_l1_conf, ksat_inp)
     khoriz_l2_ini = np.clip(khoriz_l2_ini,a_min = 0.01, a_max = None)
+    khoriz_l1_ini = np.clip(khoriz_l1_ini,a_min = 0.01, a_max = None)    
+    # ksat_l1_conf=rho_water* (10**ksat_l1_conf_log)* (g_gravity/ miu_water) *24.0 *3600.0# fine grained
+    # ksat_l2_conf=rho_water* (10**ksat_l2_conf_log)* (g_gravity/ miu_water) *24.0 *3600.0# coarse grained
+    # khoriz_l1_ini = np.where(ksat_l1_conf != 0, ksat_l1_conf, ksat_inp)
+    # khoriz_l2_ini =	np.where(ksat_l2_conf != 0, ksat_l2_conf, ksat_inp)
+    # khoriz_l1_ini = np.clip(khoriz_l1_ini,a_min = 0.01, a_max = None)
+    # khoriz_l2_ini = np.clip(khoriz_l2_ini,a_min = 0.01, a_max = None)
     #k vertical
-    kvert_l2_ini = np.where(khoriz_l2_ini >-999,khoriz_l2_ini*cellarea/(delcol*delrow), (10.0*cellarea/(delcol*delrow)))
-    kvert_l1 = np.where(khoriz_l1_ini>-999, (10.0*cellarea/(delcol*delrow)),(10.0*cellarea/(delcol*delrow)))
-    kvert_l2 = np.maximum(dikte_l2/5000,kvert_l2_ini)
-    kd_l2_ini = khoriz_l2_ini*(dikte_l2)
-    kd_l1_ini = khoriz_l1_ini*(dikte_l1)	
-    kd_l2 = np.maximum(30,kd_l2_ini)
+    kvert_l1_ini = np.where(khoriz_l1_ini >-999,khoriz_l1_ini*cellarea/(delcol*delrow), (10.0*cellarea/(delcol*delrow)))
+    kvert_l2 = np.where(khoriz_l2_ini>-999, (10.0*cellarea/(delcol*delrow)),(10.0*cellarea/(delcol*delrow)))
+    kvert_l1 = np.maximum(dikte_l1/5000,kvert_l1_ini)
+    kd_l1_ini = khoriz_l1_ini*(dikte_l1)
+    kd_l2_ini = khoriz_l2_ini*(dikte_l2)	
     kd_l1 = np.maximum(30,kd_l1_ini)
-    khoriz_l2 = kd_l2/dikte_l2
+    kd_l2 = np.maximum(30,kd_l2_ini)
     khoriz_l1 = kd_l1/dikte_l1
-    khoriz_l2[khoriz_l2<0]  = 20
-    khoriz_l1[khoriz_l1<0]  = 190
+    khoriz_l2 = kd_l2/dikte_l2
+    khoriz_l1[khoriz_l1<0]  = 20
+    khoriz_l2[khoriz_l2<0]  = 190
+    kvert_l1[kvert_l1<0] = 1e10
     kvert_l2[kvert_l2<0] = 1e10
-    kvert_l2[kvert_l2<0] = 1e10
-    k_hor = [khoriz_l2, khoriz_l1]
-    k_ver = [khoriz_l2*0.1,khoriz_l1*0.1]
+    k_hor = [khoriz_l1, khoriz_l2]
+    k_ver = [khoriz_l1*0.1,khoriz_l2*0.1]    
+    # kvert_l2_ini = np.where(khoriz_l2_ini >-999,khoriz_l2_ini*cellarea/(delcol*delrow), (10.0*cellarea/(delcol*delrow)))
+    # kvert_l1 = np.where(khoriz_l1_ini>-999, (10.0*cellarea/(delcol*delrow)),(10.0*cellarea/(delcol*delrow)))
+    # kvert_l2 = np.maximum(dikte_l2/5000,kvert_l2_ini)
+    # kd_l2_ini = khoriz_l2_ini*(dikte_l2)
+    # kd_l1_ini = khoriz_l1_ini*(dikte_l1)	
+    # kd_l2 = np.maximum(30,kd_l2_ini)
+    # kd_l1 = np.maximum(30,kd_l1_ini)
+    # khoriz_l2 = kd_l2/dikte_l2
+    # khoriz_l1 = kd_l1/dikte_l1
+    # khoriz_l2[khoriz_l2<0]  = 20
+    # khoriz_l1[khoriz_l1<0]  = 190
+    # kvert_l2[kvert_l2<0] = 1e10
+    # kvert_l2[kvert_l2<0] = 1e10
+    # k_hor = [khoriz_l2, khoriz_l1]
+    # k_ver = [khoriz_l2*0.1,khoriz_l1*0.1]
     # Storage Coefficient
     spe_yi_inp = spe_yi_inp
     # spe_yi_inp = np.where(landmask ==1, spe_yi_inp,missingvalue)
@@ -194,7 +227,8 @@ def riv_input(monthly_discharge,qaverage):
     
     riv_slope = np.where(riv_width > 0.0, riv_slope1,missingvalue)
     riv_slope_used = np.where(riv_slope>0.00005, riv_slope,missingvalue)
-    riv_head_ini = np.where(riv_width > 30.0, Z0_floodplain2, topl2)
+    riv_head_ini = np.where(riv_width > 30.0, Z0_floodplain2, topl1)
+    # riv_head_ini = np.where(riv_width > 30.0, Z0_floodplain2, topl2)
     riv_head_ini[bdmask==-1] = 0  
     riv_head_ini[bdmask==0] = 0
     riv_head_ini[bdmask==-2] = 0   
@@ -260,10 +294,15 @@ def chd_input(stress_period):
         if id_num != 1 and id_num != 4:# 
             continue
         if id_num == 4:# 
-            gwll2[stress_period][cellid_2][cellid_3] = 0
-        if np.isnan(gwll2[stress_period][cellid_2][cellid_3]):
-            gwll2[stress_period][cellid_2][cellid_3] = 0
-        CHDstress_period_data.append([cellid_1, cellid_2, cellid_3, gwll2[stress_period][cellid_2][cellid_3]]) # cellid_1 is layer number: 0 for top, 1 for bot
+            # gwll2[stress_period][cellid_2][cellid_3] = 0
+            gwll1[stress_period][cellid_2][cellid_3] = 0
+        # if np.isnan(gwll2[stress_period][cellid_2][cellid_3]):
+        if np.isnan(gwll1[stress_period][cellid_2][cellid_3]):
+            # gwll2[stress_period][cellid_2][cellid_3] = 0
+            gwll1[stress_period][cellid_2][cellid_3] = 0
+        # CHDstress_period_data.append([cellid_1, cellid_2, cellid_3, gwll2[stress_period][cellid_2][cellid_3]]) # cellid_1 is layer number: 0 for top, 1 for bot
+        CHDstress_period_data.append([cellid_1, cellid_2, cellid_3, gwll1[stress_period][cellid_2][cellid_3]]) # cellid_1 is layer number: 0 for top, 1 for bot
+
     # second layer (bot layer)
     nrow, ncol = bdmask.shape
     cellids = [(1, i, j) for i in range(nrow) for j in range(ncol)]
@@ -273,25 +312,33 @@ def chd_input(stress_period):
         if id_num != 1 and id_num != 4:# 
             continue
         if id_num == 4:# 
-            gwll1[stress_period][cellid_2][cellid_3] = 0
-        if np.isnan(gwll1[stress_period][cellid_2][cellid_3]):
-            gwll1[stress_period][cellid_2][cellid_3] = 0
-        CHDstress_period_data.append([cellid_1, cellid_2, cellid_3, gwll1[stress_period][cellid_2][cellid_3]]) # cellid_1 is layer number: 0 for top, 1 for bot
+            # gwll1[stress_period][cellid_2][cellid_3] = 0
+            gwll2[stress_period][cellid_2][cellid_3] = 0
+        # if np.isnan(gwll1[stress_period][cellid_2][cellid_3]):
+        if np.isnan(gwll2[stress_period][cellid_2][cellid_3]):
+            # gwll1[stress_period][cellid_2][cellid_3] = 0
+            gwll2[stress_period][cellid_2][cellid_3] = 0
+        # CHDstress_period_data.append([cellid_1, cellid_2, cellid_3, gwll1[stress_period][cellid_2][cellid_3]]) # cellid_1 is layer number: 0 for top, 1 for bot
+        CHDstress_period_data.append([cellid_1, cellid_2, cellid_3, gwll2[stress_period][cellid_2][cellid_3]]) # cellid_1 is layer number: 0 for top, 1 for bot
     return CHDstress_period_data # list of list: 
 
 #%% loop for mfrun
-layer2_head = {} # top
-layer1_head = {} # bot
+# layer2_head = {} # top
+layer1_head = {} # top
+# layer1_head = {} # bot
+layer2_head = {} # bot
+
 for stress_period,date in zip(sp, sp_date):
     if (stress_period==0):
         print('assign steady-state computed head as the starting head for stress period 0')
         startinghead = initial_head()
     else:
-        startingheadl2 = layer2_head[stress_period-1]
-        startingheadl1 = layer1_head[stress_period-1]
-        startinghead = [startingheadl2,startingheadl2]
+        startingheadl2 = layer2_head[stress_period-1] # bot
+        startingheadl1 = layer1_head[stress_period-1] # top
+        # startinghead = [startingheadl2,startingheadl2]
+        startinghead = [startingheadl1,startingheadl2]
         print(f"start assigning the variables for stress period {stress_period}...\n")
-    Nlay,Nrow,Ncol,delrow,delcol,topl2,botm = dis_ic_parameter()
+    Nlay,Nrow,Ncol,delrow,delcol,topl1,botm = dis_ic_parameter()
     k_hor,k_ver,stor = npf_parameter()
     RCHstress_period_data = rch_input(ts_gwrecharge[stress_period])
     RIVstress_period_data = riv_input(ts_discharge[stress_period],qbank)
@@ -323,7 +370,7 @@ for stress_period,date in zip(sp, sp_date):
     dis = flopy.mf6.ModflowGwfdis(
         gwf,length_units = "METERS",nogrb = True, xorigin = 0,yorigin = 0,
         angrot = 0,nlay=Nlay, nrow=Nrow, ncol=Ncol,
-        idomain = idomain1, delr=delrow,delc=delcol,top=topl2, botm=botm)
+        idomain = idomain1, delr=delrow,delc=delcol,top=topl1, botm=botm)
     npf = flopy.mf6.ModflowGwfnpf(
         gwf, save_flows = False, print_flows = False, save_specific_discharge =False,
         save_saturation = False, perioddata = None, dev_no_newton = False,
@@ -341,8 +388,8 @@ for stress_period,date in zip(sp, sp_date):
         gwf,stress_period_data=RCHstress_period_data)
     riv = flopy.mf6.ModflowGwfriv(
         gwf,stress_period_data= RIVstress_period_data)
-    saverecord = [("HEAD", "ALL")]
-    printrecord = [("HEAD", "ALL")]
+    saverecord = [("HEAD", "ALL"), ("BUDGET", "ALL")]
+    printrecord = [("HEAD", "ALL"), ("BUDGET", "ALL")]
     headfile = "{}_{}.hds".format(name,date)
     head_filerecord = [headfile]
     budgetfile = "{}.cbb".format(name)
@@ -363,23 +410,23 @@ for stress_period,date in zip(sp, sp_date):
         print(f"MODFLOW 6 terminated normally for stressperiod: {stress_period}\n")
         print(f"extracting the head and budget files for stress period {stress_period}...\n")
         head = flopy.utils.binaryfile.HeadFile(outputdir+headfile)
-        layer2_head[stress_period] = head.get_data()[0]
-        layer1_head[stress_period] = head.get_data()[1]
+        layer1_head[stress_period] = head.get_data()[0] # top
+        layer2_head[stress_period] = head.get_data()[1] # bot
 
 ## save head to nc
-nc_file_path = '/lustre/nobackup/WUR/ESG/yuan018/domain_Indus.nc' # prepare a indus domain nc file, put somewhere as nc_file_path
-nc_area = nc.Dataset(nc_file_path, 'a')
-lon = nc_area.variables['lon'][:]
-lat = nc_area.variables['lat'][:]
-mask = nc_area.variables['mask'][:]
+indus_simhead_path = '/lustre/nobackup/WUR/ESG/yuan018/domain_Indus.nc' # prepare a indus domain nc file, put somewhere as indus_simhead_path
+nc_indus_simhead = nc.Dataset(indus_simhead_path, 'a')
+lon = nc_indus_simhead.variables['lon'][:]
+lat = nc_indus_simhead.variables['lat'][:]
+mask = nc_indus_simhead.variables['mask'][:]
 mask = mask.mask
 
 # create time dim and variable
 start_date = datetime(1968, 1, 1)
 end_date = datetime(2000, 12, 31)
 num_time_steps = (end_date.year - start_date.year) * 12 + end_date.month - start_date.month + 1
-time_dim = nc_area.createDimension('time', num_time_steps)
-time_var = nc_area.createVariable('time', np.float64, ('time',))
+time_dim = nc_indus_simhead.createDimension('time', num_time_steps)
+time_var = nc_indus_simhead.createVariable('time', np.float64, ('time',))
 time_var.units = 'days since 1968-01-01'  # set time unit
 
 # create time step
@@ -388,24 +435,29 @@ time_data = date2num(time_steps, units=time_var.units, calendar='gregorian')
 time_var[:] = time_data
 
 # create water level variable, add it to time dim
-l2_top_gwl = nc_area.createVariable('bothead', np.float32, ('time','lat', 'lon'))# top layer water head
-l2_top_gwl.units = 'meters'
-l1_top_gwl = nc_area.createVariable('tophead', np.float32, ('time','lat', 'lon'))
-l1_top_gwl.units = 'meters'
+# l2_gw_head = nc_indus_simhead.createVariable('bothead', np.float32, ('time','lat', 'lon'))# top layer water head
+# l2_gw_head.units = 'meters'
+# l1_gw_head = nc_indus_simhead.createVariable('tophead', np.float32, ('time','lat', 'lon'))
+# l1_gw_head.units = 'meters'
 
-for key in range(9999): # write a big number
-    if key in layer2_head: # layer1_head: dict
-        layer2_head_2d_array = layer2_head[key] # key: month
-        rows, cols = len(layer2_head_2d_array), len(layer2_head_2d_array[0])
-        layer2_head_3d_array = layer2_head_2d_array.reshape(1, rows, cols) # reshape to a 3D array
-        l2_top_gwl[key, :, :] = layer2_head_3d_array
+l1_gw_head = nc_indus_simhead.createVariable('tophead', np.float32, ('time','lat', 'lon'))# top layer water head
+l1_gw_head.units = 'meters'
+l2_gw_head = nc_indus_simhead.createVariable('bothead', np.float32, ('time','lat', 'lon'))# bot layer water head
+l2_gw_head.units = 'meters'
 
 for key in range(9999): # write a big number
     if key in layer1_head: # layer1_head: dict
         layer1_head_2d_array = layer1_head[key] # key: month
         rows, cols = len(layer1_head_2d_array), len(layer1_head_2d_array[0])
         layer1_head_3d_array = layer1_head_2d_array.reshape(1, rows, cols) # reshape to a 3D array
-        l1_top_gwl[key, :, :] = layer1_head_3d_array
+        l1_gw_head[key, :, :] = layer1_head_3d_array
+
+for key in range(9999): # write a big number
+    if key in layer2_head: # layer2_head: dict
+        layer2_head_2d_array = layer2_head[key] # key: month
+        rows, cols = len(layer2_head_2d_array), len(layer2_head_2d_array[0])
+        layer2_head_3d_array = layer2_head_2d_array.reshape(1, rows, cols) # reshape to a 3D array
+        l2_gw_head[key, :, :] = layer2_head_3d_array
 
 
 topl1_gwl.close()
