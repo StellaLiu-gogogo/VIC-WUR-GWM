@@ -24,17 +24,16 @@ class Pathconfig:
     aqdepth_ini: np.ndarray = gdal.Open(mfinput_dir + 'damc_ave.nc').ReadAsArray()
     ksat_log: np.ndarray = gdal.Open(mfinput_dir + 'lkmc_ave.nc').ReadAsArray()
     cellarea: np.ndarray = gdal.Open(mfinput_dir + 'Indus_CellArea_m2_05min.nc').ReadAsArray()
-    qbank: np.ndarray =gdal.Open(mfinput_dir + 'Qbank_new_average.nc') 
+    qbank: np.ndarray =gdal.Open(mfinput_dir + 'Qbank_new_average.nc').ReadAsArray()
     riv_slope1: np.ndarray = gdal.Open(mfinput_dir+'slope05min_avgFrom30sec.nc').ReadAsArray()
     Z0_floodplain: np.ndarray = gdal.Open(mfinput_dir+'efplact_new_05min.nc').ReadAsArray()
-    qaverage: np.ndarray = gdal.Open(mfinput_dir + 'mean_discharge_edwinInput.nc').ReadAsArray()
     min_dem: np.ndarray = gdal.Open(mfinput_dir+'mindem_05min.nc').ReadAsArray()
     KQ3: np.ndarray = gdal.Open(mfinput_dir + 'Recess_NEW.nc').ReadAsArray()
     conflayers: np.ndarray = gdal.Open(mfinput_dir + 'conflayers4.nc').ReadAsArray()
     ksat_l1_conf_log: np.ndarray = gdal.Open(mfinput_dir + 'kl1B_ave.nc').ReadAsArray()
     ksat_l2_conf_log: np.ndarray = gdal.Open(mfinput_dir + 'kl2B_ave.nc').ReadAsArray()
     spe_yi_inp: np.ndarray = gdal.Open(mfinput_dir+ 'StorCoeff_NEW.nc').ReadAsArray()
-    #vic_output_file: nc.Dataset = nc.Dataset('/lustre/nobackup/WUR/ESG/yuan018/04Input_Indus/fluxes_Modis_GFDL-ESM4adj_historical_1970_2000_naturalized_offline_.1968-01.nc') 
+    vic_output_file: nc.Dataset = nc.Dataset('/lustre/nobackup/WUR/ESG/yuan018/04Input_Indus/fluxes_Modis_GFDL-ESM4adj_historical_1970_2000_naturalized_offline_.1968-01.nc') 
     nc_boundary: nc.Dataset = nc.Dataset(mfinput_dir + 'boundary.nc')
     bdmask: np.ndarray = nc_boundary.variables['idomain'][:].data
     topl1_gwl: nc.Dataset = nc.Dataset(mfinput_dir + 'topl1_gwl_Indus_monthly_1968to2000.nc')
@@ -54,8 +53,8 @@ class Pathconfig:
         self.configfile_dir = configfile_dir
     def set_vic_executable(self, vic_executable): # VIC executable
         self.vic_executable = vic_executable
-    def set_startstamp(self, startstamp): # VIC start time
-        self.startstamp = startstamp
+    def set_template_dir(self, template_dir): # VIC configuration file template
+        self.template_dir = template_dir
     def set_output_dir(self, output_dir): # Directory to store the vic output files
         self.output_dir = output_dir
     def set_mfinput_dir(self, mfinput_dir): # raw input data directory for modflow simulation
@@ -82,8 +81,6 @@ class Pathconfig:
         self.riv_slope1 = riv_slope1
     def set_Z0_floodplain(self, Z0_floodplain):  # raw floodplain depth data (modflow)
         self.Z0_floodplain = Z0_floodplain
-    def set_qaverage(self, qaverage): # raw mean discharge data (modflow)
-        self.qaverage = qaverage
     def set_min_dem(self, min_dem): # raw minimum dem data (modflow)
         self.min_dem = min_dem
     def set_KQ3(self, KQ3): # raw KQ3 data (modflow)
@@ -120,24 +117,35 @@ class Pathconfig:
         self.idomain = idomain
     def set_qbank(self, qbank):
         self.qbank = qbank
+
     
 class config:
     def __init__(self): #without specifying the input, the default input will be used as below: 
         self.paths = Pathconfig()
         self.startstamp =  datetime(1968, 1, 1)
-        self.ts_gwrecharge = gdal.Open(self.paths.mfinput_dir+'gwRecharge_month_1968to2000.nc').ReadAsArray()[0,:,:]  #TODO: change this 
+        self.ts_gwrecharge = self.paths.vic_output_file.variables['OUT_GWRECHARGE'][0,:,:].data
+        self.ts_gwrecharge = np.flip(self.ts_gwrecharge, axis=1)
+        self.ts_discharge = self.paths.vic_output_file.variables['OUT_DISCHARGE'][0,:,:].data
+        self.ts_discharge = np.flip(self.ts_discharge, axis=1)   #TODO: later on this needs to be updated with vic output file for each time step
         self.bdmask = self.paths.nc_boundary.variables['idomain'][:].data 
         self.humanimpact = False
         
         #from here on are some derived variables based on the variables above:
         self.missingvalue = self.paths.aqdepth_ini[0][0] 
-        self.rcmissingvalue = self.ts_gwrecharge[179][0]
+        self.rcmissingvalue = self.ts_gwrecharge[179][1]
         self.idomain = self.paths.bdmask.astype(int)
         self.Nlay = 2  # number of layers in modflow
         self.Nrow, self.Ncol = self.paths.bdmask.shape  # number of rows and columns in modflow
         self.delrow = self.paths.clonemap.GetGeoTransform()[1]*111*1000 # cell size in y direction in modflow
-        self.delcol = self.paths.clonemap.GetGeoTransform()[5]*111*1000 # cell size in x direction in modflow
+        self.delcol = abs(self.paths.clonemap.GetGeoTransform()[5]*111*1000) # cell size in x direction in modflow
 
+        self.stress_period = -1
+    def set_startstamp(self, startstamp): # VIC start time
+        self.startstamp = startstamp
+    
+    def timestep_counter(self): #remember to call this function after each time step
+        self.stress_period += 1
+        return self.stress_period    #TODO: 这个也许有错。也许要写成装饰器？ 因为需要在每一个时间步之后都要调用这个函数，所以这个函数应该是一个装饰器，而不是一个函数？
             
     def set_humanimpact(self, humanimpact): # whether to vic simulation options for human impact is turned on
         self.humanimpact = humanimpact
@@ -218,7 +226,7 @@ class config:
         stor_sec = spe_yi_inp
         stor=[stor_prim,stor_prim]
         return k_hor,k_ver,stor
-    def get_rch_param(self):
+    def get_rch_input(self):
         rch_nat = self.ts_gwrecharge
         rch_nat[self.paths.bdmask == 2 & (rch_nat ==self.rcmissingvalue)] = 0
         recharge_inp = ((rch_nat/(1000*365)*self.paths.cellarea)/(self.delcol*self.delrow))
@@ -240,25 +248,133 @@ class config:
                 continue
             cellid_1, cellid_2, cellid_3 = cellid
             RCHstress_period_data.append([cellid_1, cellid_2, cellid_3, value])
+            
         return RCHstress_period_data
+    def get_riv_input(self):
+        if not hasattr(self, 'top_layer1'):
+            self.cal_toplayer_elevation()
+        qaverage = self.paths.qbank
+        monthly_discharge = self.ts_discharge
+        riv_manning, resistance, riv_bedres_inp = 0.045,1.0,1.0000
+        min_dem2 = np.where(self.paths.min_dem <0,0,self.paths.min_dem)
+        Z0_floodplain1 = np.maximum(min_dem2, self.paths.Z0_floodplain)
+        Z0_floodplain2 = np.where(self.paths.Z0_floodplain < 0.0, Z0_floodplain1, self.paths.Z0_floodplain)
+        riv_width = 4.8* ((qaverage)**0.5)
+        riv_width = np.maximum(riv_width, 0.5)
+                
+        riv_slope = np.where(riv_width > 0.0, self.paths.riv_slope1,self.missingvalue)
+        riv_slope_used = np.where(riv_slope>0.00005, riv_slope,self.missingvalue)
+        riv_head_ini = np.where(riv_width > 30.0, Z0_floodplain2, self.top_layer1)
+        # riv_head_ini = np.where(riv_width > 30.0, Z0_floodplain2, topl2)
+        riv_head_ini[self.bdmask==-1] = 0  
+        riv_head_ini[self.bdmask==0] = 0
+        riv_head_ini[self.bdmask==-2] = 0   
+                
+        riv_depth_bkfl = ((riv_manning*(qaverage)**0.5)/(riv_width*riv_slope_used**0.5))**(3.0/5.0)
+        riv_depth_bkfl = np.where(np.isnan(riv_depth_bkfl),self.missingvalue,riv_depth_bkfl)
+        riv_bot_bkfl = min_dem2 - riv_depth_bkfl
+        
+        riv_depth_avg1 = ((riv_manning*((monthly_discharge)**0.5))/(riv_width*riv_slope_used**0.5))**(3.0/5.0) #  
+        riv_depth_avg = np.where(riv_depth_avg1 < 0.01, 0.0, riv_depth_avg1)
+        riv_depth_avg = np.where(np.isnan(riv_depth_avg),0,riv_depth_avg)
+        riv_head=riv_bot_bkfl + riv_depth_avg
+        riv_head2 = np.where(np.isnan(riv_head), riv_head_ini, riv_head)
+        riv_head2 = np.where(riv_head == -1* self.missingvalue, riv_head_ini, riv_head)
+        denominator = np.where(riv_width >= 30.0, riv_width * (self.paths.cellarea*2.0) ** 0.5, 0.0)
+        riv_cond =  1 / resistance * denominator
+        riv_cond[self.bdmask == -1]=0
+        riv_cond[self.bdmask == 0]=0
+        riv_cond[self.bdmask == -2]=0
+        drn_width1 = np.maximum(10,riv_width)
+        drn_width = np.where(riv_cond == 0.0, drn_width1, 0.0)
+        drn_cond = np.where(riv_cond ==0, (1.0/resistance)*drn_width*(self.paths.cellarea*2)**0.5,0.0)
+        drn_cond = np.where(drn_cond<1e-20, 0,drn_cond)
+        riv_head_comb = np.where(riv_cond > 0.0, riv_head2, riv_head_ini)
+        riv_head_comb = np.where(np.isnan(riv_head_comb),0,riv_head_comb)
+        riv_head_comb[self.bdmask==-1]=np.nan
+        riv_head_comb[self.bdmask==0]=np.nan
+        riv_head_comb[self.bdmask==-2]=np.nan
+        riv_bot_comb = np.where(riv_cond >0.0, riv_bot_bkfl,riv_head_ini)#TODO
+        riv_bot_comb[np.isinf(riv_bot_comb)] = 0
+        riv_bot_comb = np.where(riv_bot_comb == -(self.missingvalue), np.nan, riv_bot_comb) #TODO
+        riv_bot_comb[self.bdmask==-1]=np.nan
+        riv_bot_comb[self.bdmask==0]=np.nan
+        riv_bot_comb[self.bdmask==-2]=np.nan
+        riv_cond_comb = np.where(riv_cond>0, riv_cond, drn_cond)
+        riv_cond_comb[self.bdmask==-1]=np.nan
+        riv_cond_comb[self.bdmask==0]=np.nan
+        riv_cond_comb[self.bdmask==-2]=np.nan
+
+        
+        nrow, ncol = self.bdmask.shape
+        cellids = [(0, i, j) for i in range(nrow) for j in range(ncol)]
+        RIVstress_period_data = []
+        for cellid, stage, rbot, cond, bdmask_ind in zip(cellids, riv_head_comb.flatten(), riv_bot_comb.flatten(), riv_cond_comb.flatten(), self.bdmask.flatten()): 
+            # Skip cellids with NaN values in stage or rbot
+            # if np.isnan(stage) or np.isnan(rbot) or np.isnan(cond) or cond == 0 or bdmask_ind == 0 or bdmask_ind == -1:
+            if np.isnan(stage) or np.isnan(rbot) or np.isnan(cond) or cond == 0 or bdmask_ind != 2:
+                continue
+            cellid_1, cellid_2, cellid_3 = cellid
+            RIVstress_period_data.append([cellid_1, cellid_2, cellid_3, stage, cond, rbot])
+        return RIVstress_period_data
+    def get_chd_input(self):
+        CHDstress_period_data = []
+        # first layer (top layer)
+        nrow, ncol = self.bdmask.shape
+        cellids = [(0, i, j) for i in range(nrow) for j in range(ncol)] # 创建一个包含元组的列表，每个元组包含三个值：0、i 和 j
+        for cellid, id_num in zip(cellids, self.idomain.flatten()):
+            cellid_1, cellid_2, cellid_3 = cellid
+            # if id_num != 1:# 
+            if id_num != 1 and id_num != 4:# 
+                continue
+            if id_num == 4:# 
+                # gwll2[stress_period][cellid_2][cellid_3] = 0
+                self.paths.gwll1[self.stress_period][cellid_2][cellid_3] = 0
+            # if np.isnan(gwll2[stress_period][cellid_2][cellid_3]):
+            if np.isnan(self.paths.gwll1[self.stress_period][cellid_2][cellid_3]):
+                # gwll2[stress_period][cellid_2][cellid_3] = 0
+                self.paths.gwll1[self.stress_period][cellid_2][cellid_3] = 0
+            # CHDstress_period_data.append([cellid_1, cellid_2, cellid_3, gwll2[stress_period][cellid_2][cellid_3]]) # cellid_1 is layer number: 0 for top, 1 for bot
+            CHDstress_period_data.append([cellid_1, cellid_2, cellid_3, self.paths.gwll1[self.stress_period][cellid_2][cellid_3]]) # cellid_1 is layer number: 0 for top, 1 for bot
+
+        # second layer (bot layer)
+        nrow, ncol = self.bdmask.shape
+        cellids = [(1, i, j) for i in range(nrow) for j in range(ncol)]
+        for cellid, id_num in zip(cellids, self.idomain.flatten()):
+            cellid_1, cellid_2, cellid_3 = cellid
+            # if id_num != 1:
+            if id_num != 1 and id_num != 4:# 
+                continue
+            if id_num == 4:# 
+                # gwll1[stress_period][cellid_2][cellid_3] = 0
+                self.paths.gwll2[self.stress_period][cellid_2][cellid_3] = 0
+            # if np.isnan(gwll1[stress_period][cellid_2][cellid_3]):
+            if np.isnan(self.paths.gwll2[self.stress_period][cellid_2][cellid_3]):
+                # gwll1[stress_period][cellid_2][cellid_3] = 0
+                self.paths.gwll2[self.stress_period][cellid_2][cellid_3] = 0
+            # CHDstress_period_data.append([cellid_1, cellid_2, cellid_3, gwll1[stress_period][cellid_2][cellid_3]]) # cellid_1 is layer number: 0 for top, 1 for bot
+            CHDstress_period_data.append([cellid_1, cellid_2, cellid_3, self.paths.gwll2[self.stress_period][cellid_2][cellid_3]]) # cellid_1 is layer number: 0 for top, 1 for bot
+        return CHDstress_period_data
+
+        
+            
+            
+    
+    
 
 #%%
 config_indus_ubuntu = config()
 
-
-k_hot,k_ver,stor = config_indus_ubuntu.get_npf_param()
-RCHstress_period_data = config_indus_ubuntu.get_rch_param()
-
-#%%
-
-cwd = '/lustre/nobackup/WUR/ESG/liu297/gitrepo/VIC-WUR-GWM-1910/vic_online/'
-config_indus_ubuntu.paths.set_template_dir(os.path.join(cwd, 'python', 'VIC_config_file_naturalized_template_pyread_anunna.txt'))
-config_indus_ubuntu.paths.set_statefile_dir(os.path.join(cwd, 'python', 'statefile'))
-config_indus_ubuntu.paths.set_configfile_dir(os.path.join(cwd, 'python', 'configfile'))
-config_indus_ubuntu.paths.set_vic_executable('/lustre/nobackup/WUR/ESG/liu297/vic_indus/11indus_run/99vic_offline_src/drivers/image/vic_image_gwm.exe')
-config_indus_ubuntu.paths.set_startstamp(datetime(1968, 1, 1))
-config_indus_ubuntu.paths.set_mfinput_dir('/lustre/nobackup/WUR/ESG/yuan018/04Input_Indus/')
-config_indus_ubuntu.paths.set_mfoutput_dir('/lustre/nobackup/WUR/ESG/liu297/gitrepo/VIC-WUR-GWM-1910/vic_online/python/mfoutput/workspace/')
-config_indus_ubuntu.set_humanimpact(False)
+test = config_indus_ubuntu.ts_gwrecharge
+test2 = config_indus_ubuntu.get_rch_input()
+#cwd = '/lustre/nobackup/WUR/ESG/liu297/gitrepo/VIC-WUR-GWM-1910/vic_online/'
+#config_indus_ubuntu.paths.set_template_dir(os.path.join(cwd, 'python', 'VIC_config_file_naturalized_template_pyread_anunna.txt'))
+#config_indus_ubuntu.paths.set_statefile_dir(os.path.join(cwd, 'python', 'statefile'))
+#config_indus_ubuntu.paths.set_configfile_dir(os.path.join(cwd, 'python', 'configfile'))
+#config_indus_ubuntu.paths.set_vic_executable('/lustre/nobackup/WUR/ESG/liu297/vic_indus/11indus_run/99vic_offline_src/drivers/image/vic_image_gwm.exe')
+#config_indus_ubuntu.paths.set_startstamp(datetime(1968, 1, 1))
+#config_indus_ubuntu.paths.set_mfinput_dir('/lustre/nobackup/WUR/ESG/yuan018/04Input_Indus/')
+#config_indus_ubuntu.paths.set_mfoutput_dir('/lustre/nobackup/WUR/ESG/liu297/gitrepo/VIC-WUR-GWM-1910/vic_online/python/mfoutput/workspace/')
+#config_indus_ubuntu.set_humanimpact(False)
 
 # %%

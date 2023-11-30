@@ -5,6 +5,10 @@ os.chdir('/lustre/nobackup/WUR/ESG/liu297/gitrepo/VIC-WUR-GWM-1910/vic_online/py
 import subprocess
 from datetime import datetime, timedelta
 import config_module
+import netCDF4 as nc
+import numpy as np
+import support_function as sf
+
 #%%
 def prepare_vic(startyear, startmonth, startday, endyear, endmonth, endday, 
             stateyear, statemonth, stateday, init_date, init_datestr,
@@ -15,15 +19,15 @@ def prepare_vic(startyear, startmonth, startday, endyear, endmonth, endday,
     prefixes_firststep = {
     "STARTYEAR": startyear,    "STARTMONTH": startmonth,    "STARTDAY": startday,
     "ENDYEAR": endyear,    "ENDMONTH": endmonth,    "ENDDAY": endday,
-    "STATENAME":  os.path.join(config.statefile_dir, "state_file_"),
+    "STATENAME":  os.path.join(config.paths.statefile_dir, "state_file_"),
     "STATEYEAR": stateyear,    "STATEMONTH": statemonth,    "STATEDAY": stateday, 
     # Add other prefixes and their corresponding values here later if necessary
     }
     prefixes = {
     "STARTYEAR": startyear,    "STARTMONTH": startmonth,    "STARTDAY": startday,
     "ENDYEAR": endyear,    "ENDMONTH": endmonth,    "ENDDAY": endday,
-    "INIT_STATE": os.path.join(config.statefile_dir, f"state_file_.{init_datestr}_00000.nc"),
-    "STATENAME":  os.path.join(config.statefile_dir, "state_file_"),
+    "INIT_STATE": os.path.join(config.paths.statefile_dir, f"state_file_.{init_datestr}_00000.nc"),
+    "STATENAME":  os.path.join(config.paths.statefile_dir, "state_file_"),
     "STATEYEAR": stateyear,    "STATEMONTH": statemonth,    "STATEDAY": stateday,
     # Add other prefixes and their corresponding values here later if necessary
     }
@@ -40,14 +44,14 @@ def prepare_vic(startyear, startmonth, startday, endyear, endmonth, endday,
     current_prefixes["ENDYEAR"] = endyear
     current_prefixes["ENDMONTH"] = endmonth
     current_prefixes["ENDDAY"] = endday
-    current_prefixes["STATENAME"] = os.path.join(config.statefile_dir, "state_file_")
+    current_prefixes["STATENAME"] = os.path.join(config.paths.statefile_dir, "state_file_")
     current_prefixes["STATEYEAR"] = stateyear
     current_prefixes["STATEMONTH"] = statemonth
     current_prefixes["STATEDAY"] = stateday
     if "INIT_STATE" in current_prefixes:
-        current_prefixes["INIT_STATE"] = os.path.join(config.statefile_dir, f"state_file_.{init_datestr}_00000.nc")
+        current_prefixes["INIT_STATE"] = os.path.join(config.paths.statefile_dir, f"state_file_.{init_datestr}_00000.nc")
     
-    with open(config.template_dir, 'r') as file:
+    with open(config.paths.template_dir, 'r') as file:
         lines = file.readlines()
 
     for i, line in enumerate(lines):
@@ -56,7 +60,7 @@ def prepare_vic(startyear, startmonth, startday, endyear, endmonth, endday,
                 lines[i] = f"{prefix}               {value}\n"
                 break    
     # Write the modified lines back to the file
-    config_file = os.path.join(config.configfile_dir, f"config_{startyear}_{startmonth}.txt")
+    config_file = os.path.join(config.paths.configfile_dir, f"config_{startyear}_{startmonth}.txt")
     with open(config_file, 'w') as file:
         file.writelines(lines)
         
@@ -64,7 +68,7 @@ def prepare_vic(startyear, startmonth, startday, endyear, endmonth, endday,
 
 #%%
 def run_vic(config, config_file, startyear, startmonth):
-    vic_executable = config.vic_executable
+    vic_executable = config.paths.vic_executable
   
     try:
         command = 'bash -c "{} -g {}"'.format(vic_executable, config_file)
@@ -73,13 +77,13 @@ def run_vic(config, config_file, startyear, startmonth):
     except subprocess.CalledProcessError:
         raise SystemExit("Stopping the simulation due to failure in VIC execution.")
 #%%    
-def vic_postprocess(config, startyear, startmonth):
+def PostProcessVIC(config, startyear, startmonth):
     # Read the VIC output
     if config.humanimpact:
         human_or_nat = "human"
     else:
         human_or_nat = "naturalized"
-    output_dir = config.output_dir
+    output_dir = config.paths.output_dir
     output_file = os.path.join(output_dir, f"fluxes_{human_or_nat}_gwm_.{startyear}-{startmonth:02d}.nc")
     vicout = nc.Dataset(output_file, 'r')
     print('Do a check if it is a coupling run(check if there is baseflow reported from VIC:)')
