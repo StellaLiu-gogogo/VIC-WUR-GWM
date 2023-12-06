@@ -1,53 +1,67 @@
 #%%
 import os 
+import sys
+sys.path.append('/lustre/nobackup/WUR/ESG/liu297/gitrepo/VIC-WUR-GWM-1910/vic_online/python')
 import flopy
 import numpy as np
+import xarray as xr
+import netCDF4 as nc
 import subprocess  # for calling shell commands
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 import calendar
 import vic_runner as vr
 import support_function as sf
-#%%
+from config_module import config_indus_ubuntu
+from osgeo import gdal
+from netCDF4 import Dataset, date2num
+from matplotlib import pyplot as plt
+from mf_run import mf
+%env LD_LIBRARY_PATH=/shared/legacyapps/netcdf/gcc/64/4.6.1/lib:$LD_LIBRARY_PATH   
 
-cwd = '/home/sliu/Documents/gitversion/VIC-WUR-GWM-1910/vic_online'
-os.chdir(cwd)
-filepath = os.path.join(cwd, 'python', 'VIC_config_file_template_pyread.txt')
-statefile_dir = os.path.join(cwd, 'python', 'statefile')  #may change later 
-configfile_dir = os.path.join(cwd, 'python', 'configfile')  #may change later
+cwd = '/lustre/nobackup/WUR/ESG/liu297/gitrepo/VIC-WUR-GWM-1910/vic_online/'
+config_indus_ubuntu.paths.set_template_dir(os.path.join(cwd, 'python', 'VIC_config_file_naturalized_template_pyread_anunna.txt'))
+config_indus_ubuntu.paths.set_statefile_dir(os.path.join(cwd, 'python', 'statefile'))
+config_indus_ubuntu.paths.set_configfile_dir(os.path.join(cwd, 'python', 'configfile'))
+config_indus_ubuntu.paths.set_vic_executable('/lustre/nobackup/WUR/ESG/liu297/vic_indus/11indus_run/99vic_offline_src/drivers/image/vic_image_gwm.exe')
+config_indus_ubuntu.set_startstamp(datetime(1968, 1, 1))
+config_indus_ubuntu.paths.set_mfinput_dir('/lustre/nobackup/WUR/ESG/yuan018/04Input_Indus/')
+config_indus_ubuntu.paths.set_mfoutput_dir('/lustre/nobackup/WUR/ESG/liu297/gitrepo/VIC-WUR-GWM-1910/vic_online/python/mfoutput/workspace/')
+config_indus_ubuntu.set_humanimpact(False)
 
-vic_executable = '/home/sliu/Documents/vic_indus/99SourceCode/VIC-WUR-GWM-1910/vic_offline/drivers/image/vic_image_gwm_offline.exe'
 
-#%%
-startstamp = datetime(1968, 1, 1)
+
 current_date = datetime(1968,1,1)
-finishdate = datetime(1975, 12, 31)
+finishdate = datetime(1968, 2, 1)
 
 # Loop over the dates
 while current_date <= finishdate:
     print("Running VIC for the time step [{}-{}]".format(current_date.year, current_date.month))
     #generate dmy for VIC run
-    (startyear , startmonth , startday,
-    endyear , endmonth , endday, 
-    stateyear , statemonth , stateday, 
-    init_date , init_datestr) = sf.prepare_dates(current_date)   
+    startyear, startmonth, startday = sf.startdate(current_date)
+    endyear, endmonth, endday = sf.enddate(current_date)
+    stateyear, statemonth, stateday = sf.statefiledate(current_date)
+    init_date,init_datestr = sf.init_datestr(current_date)
+    
          
     # prepare VIC config file
     config_file = vr.prepare_vic(startyear, startmonth, startday, 
                endyear, endmonth, endday, 
                stateyear, statemonth, stateday, 
                init_date, init_datestr, 
-               startstamp, filepath, statefile_dir, 
-               configfile_dir, vic_executable)    
-    vr.run_vic(vic_executable, config_file, startyear, startmonth)    
+               config_indus_ubuntu)    
+    vr.run_vic(config_indus_ubuntu, config_file, startyear, startmonth)    
+        
+    ts_gwrecharge, ts_discharge, ts_gwabstract = vr.PostProcessVIC(config_indus_ubuntu, startyear, startmonth) # read VIC output and prepare for MODFLOW input
     
-   
+    stress_period = config_indus_ubuntu.timestep_counter() # let stress period ++1 after each VIC run
+    print(f"start assigning the MODFLOW inputs for stress period {stress_period}...\n")
     
-    #vr.PostProcessVIC()  prepare the OUT_GWRECHARGE, OUT_DISCHARGE, and OUT_NON_REN_SECT into modflow input unit conversion
+    mfrun = mf.mfrun(current_date,stress_period,config_indus_ubuntu) # 把日期传递给mfrun这个类
+    layer1_head, layer2_head = mfrun.run_modflow() # run MODFLOW and get the head for each layer
     
-    #mf.PrepareMF()  prepare other modlofw inputs   finished. 
     
-    #mf.RunMF() basically is already there
+    
     
     #mf.PostProcessMF() 
         #1. prepare GWD data to identfy conditon of GWD and VIC soil layer depth
@@ -65,4 +79,5 @@ while current_date <= finishdate:
     
     
 
-# %%
+
+#%%
