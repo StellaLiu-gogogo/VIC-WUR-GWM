@@ -27,7 +27,7 @@ class Pathconfig:
     qbank: np.ndarray =gdal.Open(mfinput_dir + 'Qbank_new_average.nc') 
     riv_slope1: np.ndarray = gdal.Open(mfinput_dir+'slope05min_avgFrom30sec.nc').ReadAsArray()
     Z0_floodplain: np.ndarray = gdal.Open(mfinput_dir+'efplact_new_05min.nc').ReadAsArray()
-    qaverage: np.ndarray = gdal.Open(mfinput_dir + 'mean_discharge_edwinInput.nc').ReadAsArray()
+    qbank: np.ndarray = gdal.Open(mfinput_dir + 'mean_discharge_edwinInput.nc').ReadAsArray()
     min_dem: np.ndarray = gdal.Open(mfinput_dir+'mindem_05min.nc').ReadAsArray()
     KQ3: np.ndarray = gdal.Open(mfinput_dir + 'Recess_NEW.nc').ReadAsArray()
     conflayers: np.ndarray = gdal.Open(mfinput_dir + 'conflayers4.nc').ReadAsArray()
@@ -82,8 +82,6 @@ class Pathconfig:
         self.riv_slope1 = riv_slope1
     def set_Z0_floodplain(self, Z0_floodplain):  # raw floodplain depth data (modflow)
         self.Z0_floodplain = Z0_floodplain
-    def set_qaverage(self, qaverage): # raw mean discharge data (modflow)
-        self.qaverage = qaverage
     def set_min_dem(self, min_dem): # raw minimum dem data (modflow)
         self.min_dem = min_dem
     def set_KQ3(self, KQ3): # raw KQ3 data (modflow)
@@ -135,13 +133,15 @@ class config:
         
         #from here on are some derived variables based on the variables above:
         self.missingvalue = self.paths.aqdepth_ini[0][0] 
+
         self.rcmissingvalue = self.ts_gwrecharge[179][0]
+
         self.idomain = self.paths.bdmask.astype(int)
         self.Nlay = 2  # number of layers in modflow
         self.Nrow, self.Ncol = self.paths.bdmask.shape  # number of rows and columns in modflow
         self.delrow = self.paths.clonemap.GetGeoTransform()[1]*111*1000 # cell size in y direction in modflow
-        self.delcol = self.paths.clonemap.GetGeoTransform()[5]*111*1000 # cell size in x direction in modflow
 
+        self.delcol = abs(self.paths.clonemap.GetGeoTransform()[5]*111*1000) # cell size in x direction in modflow
         self.stress_period = -1
     def set_startstamp(self, startstamp): # VIC start time
         self.startstamp = startstamp
@@ -229,6 +229,7 @@ class config:
         stor_sec = spe_yi_inp
         stor=[stor_prim,stor_prim]
         return k_hor,k_ver,stor
+
     def get_rch_param(self):
         rch_nat = self.ts_gwrecharge
         rch_nat[self.paths.bdmask == 2 & (rch_nat ==self.rcmissingvalue)] = 0
@@ -251,11 +252,13 @@ class config:
                 continue
             cellid_1, cellid_2, cellid_3 = cellid
             RCHstress_period_data.append([cellid_1, cellid_2, cellid_3, value])
+
         return RCHstress_period_data
+    
     def get_riv_param(self):
         if not hasattr(self, 'top_layer1'):
             self.cal_toplayer_elevation()
-        qaverage = self.paths.qaverage
+        qaverage = self.paths.qbank
         monthly_discharge = self.ts_discharge
         riv_manning, resistance, riv_bedres_inp = 0.045,1.0,1.0000
         min_dem2 = np.where(self.paths.min_dem <0,0,self.paths.min_dem)
@@ -360,12 +363,12 @@ class config:
 
         
             
-            
-    
-    
+        
 
 #%%
 config_indus_ubuntu = config()
+
+
 #cwd = '/lustre/nobackup/WUR/ESG/liu297/gitrepo/VIC-WUR-GWM-1910/vic_online/'
 #config_indus_ubuntu.paths.set_template_dir(os.path.join(cwd, 'python', 'VIC_config_file_naturalized_template_pyread_anunna.txt'))
 #config_indus_ubuntu.paths.set_statefile_dir(os.path.join(cwd, 'python', 'statefile'))
@@ -375,5 +378,3 @@ config_indus_ubuntu = config()
 #config_indus_ubuntu.paths.set_mfinput_dir('/lustre/nobackup/WUR/ESG/yuan018/04Input_Indus/')
 #config_indus_ubuntu.paths.set_mfoutput_dir('/lustre/nobackup/WUR/ESG/liu297/gitrepo/VIC-WUR-GWM-1910/vic_online/python/mfoutput/workspace/')
 #config_indus_ubuntu.set_humanimpact(False)
-
-# %%

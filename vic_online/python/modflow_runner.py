@@ -1,6 +1,8 @@
 #%%
-os.chdir('/lustre/nobackup/WUR/ESG/liu297/gitrepo/VIC-WUR-GWM-1910/vic_online/python')
+
 import os
+os.chdir('/lustre/nobackup/WUR/ESG/liu297/gitrepo/VIC-WUR-GWM-1910/vic_online/python')
+%env LD_LIBRARY_PATH=/shared/legacyapps/netcdf/gcc/64/4.6.1/lib:$LD_LIBRARY_PATH   # for netcdf
 import numpy as np
 import flopy
 import pandas as pd
@@ -16,8 +18,6 @@ from osgeo import gdal
 from netCDF4 import Dataset, date2num
 from matplotlib import pyplot as plt
 #%%
-
-
 class mfinput:
     def __init__(self):
 

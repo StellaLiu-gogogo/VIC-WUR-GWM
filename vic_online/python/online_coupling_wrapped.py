@@ -17,6 +17,7 @@ from osgeo import gdal
 from netCDF4 import Dataset, date2num
 from matplotlib import pyplot as plt
 from mf_run import mf
+
 %env LD_LIBRARY_PATH=/shared/legacyapps/netcdf/gcc/64/4.6.1/lib:$LD_LIBRARY_PATH   
 
 cwd = '/lustre/nobackup/WUR/ESG/liu297/gitrepo/VIC-WUR-GWM-1910/vic_online/'
@@ -56,9 +57,10 @@ while current_date <= finishdate:
     
     stress_period = config_indus_ubuntu.timestep_counter() # let stress period ++1 after each VIC run
     print(f"start assigning the MODFLOW inputs for stress period {stress_period}...\n")
-    
+
     mfrun = mf.mfrun(current_date,stress_period,config_indus_ubuntu) # 把日期传递给mfrun这个类
     layer1_head, layer2_head = mfrun.run_modflow() # run MODFLOW and get the head for each layer
+
     
     
     
@@ -76,8 +78,3 @@ while current_date <= finishdate:
     
     #move to next time step
     current_date += relativedelta(months=1)
-    
-    
-
-
-#%%
