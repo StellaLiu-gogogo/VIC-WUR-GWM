@@ -43,6 +43,8 @@ class Pathconfig:
     topl2_gwl: nc.Dataset = nc.Dataset(mfinput_dir + 'topl2_gwl_Indus_monthly_1968to2000.nc')
     gwll2: np.ndarray = topl2_gwl.variables['gwl'][:].data
     gwll2: np.ndarray = np.flip(gwll2, axis=1)
+    initialhead: nc.Dataset = nc.Dataset('/lustre/nobackup/WUR/ESG/yuan018/88Logbook/try_successful_steady_state_1204/Indus_gwl_steady_state.nc')
+    
     
     def set_cwd(self, cwd):
         self.cwd = cwd
@@ -130,7 +132,7 @@ class config:
         self.ts_discharge = np.flip(self.ts_discharge, axis=1)   #TODO: later on this needs to be updated with vic output file for each time step
         self.bdmask = self.paths.nc_boundary.variables['idomain'][:].data 
         self.humanimpact = False
-        
+       
         #from here on are some derived variables based on the variables above:
         self.missingvalue = self.paths.aqdepth_ini[0][0] 
 
@@ -178,10 +180,16 @@ class config:
         self.botm = [bot_layer1, bot_layer2]
         return self.botm
     def get_initial_head(self): #this is only for the first time step. 
-        startinghead_layer1 = self.paths.gwll1[0]  
-        startinghead_layer2 = self.paths.gwll2[0]   
-        self.initial_head = [startinghead_layer1, startinghead_layer2]
-        return self.initial_head
+        startinghead_layer1 = self.paths.initialhead.variables['tophead'][:].data  
+        startinghead_layer1 = np.flip(startinghead_layer1,axis = 0)
+        #startinghead_layer1 = np.where(np.isnan(startinghead_layer1), 200, startinghead_layer1)
+        
+        startinghead_layer2 = self.paths.initialhead.variables['bothead'][:].data    
+        
+        #startinghead_layer2 = np.where(np.isnan(startinghead_layer2), 200, startinghead_layer2)
+        startinghead_layer2 = np.flip(startinghead_layer2,axis = 0)
+        self.startinghead = [startinghead_layer1, startinghead_layer2]
+        return self.startinghead
     
     def get_npf_param(self): 
         if not hasattr(self, 'aqdepth'): # lazy loading/ on demand loading
@@ -233,7 +241,7 @@ class config:
     def get_rch_param(self):
         rch_nat = self.ts_gwrecharge
         rch_nat[self.paths.bdmask == 2 & (rch_nat ==self.rcmissingvalue)] = 0
-        recharge_inp = ((rch_nat/(1000*365)*self.paths.cellarea)/(self.delcol*self.delrow))
+        recharge_inp = ((rch_nat/(1000)*self.paths.cellarea)/(self.delcol*self.delrow))
         recharge_inp = np.where(recharge_inp < 10000, recharge_inp, 0)
         npzero = np.zeros_like(recharge_inp)
         # recharge on the top layer    

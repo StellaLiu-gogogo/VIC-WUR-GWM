@@ -18,7 +18,7 @@ from matplotlib import pyplot as plt
 
 #%%
 class mfrun:
-    def __init__(self, current_date,stress_period,config_instance):
+    def __init__(self, current_date,stress_period,config_instance,layer1_head,layer2_head):
         self.current_date = current_date
         self.stress_period = stress_period
         self.config = config_indus_ubuntu
@@ -29,9 +29,10 @@ class mfrun:
         self.outer_dvclose = 50
         self.inner_dvclose = 50
         self.top_layer1 = self.config.cal_toplayer_elevation()
-        self.layer1_head = []
-        self.layer2_head = []
-        
+        self.layer1_head = layer1_head
+        self.layer2_head = layer2_head
+        self.startinghead = self.get_startinghead()
+
     def set_convergence_criteron(self,rclose,maxinner,maxouter,outer_dvclose,inner_dvclose):
         self.rclose = rclose
         self.maxinner = maxinner
@@ -47,15 +48,9 @@ class mfrun:
         perioddata = [days,nstp,tsmult]
         return perioddata
     def get_startinghead(self):
-        if (self.stress_period==0):
-            
-            self.startinghead = self.config.get_initial_head()
-            print('assigning steady-state computed head as the starting head for stress period 0')
-        else:
-            startingheadl1 = self.layer1_head[self.stress_period-1]
-            startingheadl2 = self.layer2_head[self.stress_period-1]
-            self.startinghead = [startingheadl1,startingheadl2]
-            print(f"assigning the computed head from the stress period {self.stress_period-1} for stress period {self.stress_period}...\n")
+        startingheadl1 = self.layer1_head
+        startingheadl2 = self.layer2_head
+        self.startinghead = [startingheadl1,startingheadl2]            
         return self.startinghead
     def run_modflow(self):
         print('it is running')
@@ -63,8 +58,8 @@ class mfrun:
         botm = self.config.cal_botlayer_elevation()
         khor,kver,stor = self.config.get_npf_param()
         CHDstress_period_data = self.config.get_chd_input()
-        RCHstress_period_data = self.config.get_rch_input()
-        RIVstress_period_data = self.config.get_riv_input()
+        RCHstress_period_data = self.config.get_rch_param()
+        RIVstress_period_data = self.config.get_riv_param()
         sim = flopy.mf6.MFSimulation(sim_name= self.name, 
                                      version='mf6', 
                                      sim_ws=self.config.paths.mfoutput_dir, 
@@ -178,4 +173,13 @@ class mfrun:
             self.layer1_head = head.get_data()[0] # top
             self.layer2_head = head.get_data()[1] # bot
         return self.layer1_head,self.layer2_head 
+    
+    class mf_waterbalance:
+                                      
+                                      
+                                      
+                                      
+                                      
+                                      
+                                      
                                       

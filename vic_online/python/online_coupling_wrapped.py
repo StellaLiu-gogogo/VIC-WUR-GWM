@@ -16,7 +16,7 @@ from config_module import config_indus_ubuntu
 from osgeo import gdal
 from netCDF4 import Dataset, date2num
 from matplotlib import pyplot as plt
-from mf_run import mf
+import mf_run as mf
 
 %env LD_LIBRARY_PATH=/shared/legacyapps/netcdf/gcc/64/4.6.1/lib:$LD_LIBRARY_PATH   
 
@@ -33,7 +33,7 @@ config_indus_ubuntu.set_humanimpact(False)
 
 
 current_date = datetime(1968,1,1)
-finishdate = datetime(1968, 2, 1)
+finishdate = datetime(1968, 4, 1)
 
 # Loop over the dates
 while current_date <= finishdate:
@@ -55,11 +55,23 @@ while current_date <= finishdate:
         
     ts_gwrecharge, ts_discharge, ts_gwabstract = vr.PostProcessVIC(config_indus_ubuntu, startyear, startmonth) # read VIC output and prepare for MODFLOW input
     
+    
+    config_indus_ubuntu.paths.set_ts_gwrecharge(ts_gwrecharge)
+    config_indus_ubuntu.paths.set_ts_discharge(ts_discharge)
+    config_indus_ubuntu.paths.set_vic_output_file(os.path.join(config_indus_ubuntu.paths.output_dir + 'fluxes_naturalized_gwm_.{current_date.year}_{current_date.month}.nc'))
+        
     stress_period = config_indus_ubuntu.timestep_counter() # let stress period ++1 after each VIC run
     print(f"start assigning the MODFLOW inputs for stress period {stress_period}...\n")
 
-    mfrun = mf.mfrun(current_date,stress_period,config_indus_ubuntu) # 把日期传递给mfrun这个类
+    if stress_period == 0:
+        layer1_head = config_indus_ubuntu.get_initial_head()[0]
+        layer2_head = config_indus_ubuntu.get_initial_head()[1]
+    
+    mfrun = mf.mfrun(current_date,stress_period,config_indus_ubuntu,layer1_head,layer2_head) # 把日期传递给mfrun这个类
+   
     layer1_head, layer2_head = mfrun.run_modflow() # run MODFLOW and get the head for each layer
+    
+    
 
     
     
@@ -78,3 +90,4 @@ while current_date <= finishdate:
     
     #move to next time step
     current_date += relativedelta(months=1)
+# %%
