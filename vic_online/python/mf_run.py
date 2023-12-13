@@ -141,16 +141,18 @@ class mfrun:
                                     strt = self.startinghead
                                     )
         rch = flopy.mf6.ModflowGwfrch(gwf,
-                                      stress_period_data = RCHstress_period_data
+                                      stress_period_data = RCHstress_period_data,
+                                      save_flows = True
                                       )
         riv = flopy.mf6.ModflowGwfriv(gwf,
-                                      stress_period_data = RIVstress_period_data
+                                      stress_period_data = RIVstress_period_data,
+                                      save_flows = True
                                       )
         saverecord = [("HEAD", "ALL"), ("BUDGET", "ALL")]
         printrecord = [("HEAD", "ALL"), ("BUDGET", "ALL")]
-        headfile = "{}_{}.hds".format(self.name,self.current_date)
+        headfile = "{}_{}.hds".format(self.name,self.current_date.strftime("%Y%m%d"))
         head_filerecord = [headfile]
-        budgetfile = "{}.cbb".format(self.name)
+        budgetfile = "{}_{}.cbb".format(self.name,self.current_date.strftime("%Y%m%d"))
         budget_filerecord = [budgetfile]
         ov = flopy.mf6.mfgwfoc.ModflowGwfoc(gwf,
                                             saverecord = saverecord,
@@ -174,7 +176,7 @@ class mfrun:
             self.layer2_head = head.get_data()[1] # bot
         return self.layer1_head,self.layer2_head 
     
-    class mf_waterbalance:
+   # class mf_waterbalance:
                                       
                                       
                                       

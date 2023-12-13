@@ -43,7 +43,7 @@ class Pathconfig:
     topl2_gwl: nc.Dataset = nc.Dataset(mfinput_dir + 'topl2_gwl_Indus_monthly_1968to2000.nc')
     gwll2: np.ndarray = topl2_gwl.variables['gwl'][:].data
     gwll2: np.ndarray = np.flip(gwll2, axis=1)
-    initialhead: nc.Dataset = nc.Dataset('/lustre/nobackup/WUR/ESG/yuan018/88Logbook/try_successful_steady_state_1204/Indus_gwl_steady_state.nc')
+    initialhead: nc.Dataset = nc.Dataset('/lustre/nobackup/WUR/ESG/yuan018/87Logbook/try_successful_steady_state_1211/Indus_gwl_steady_state.nc')
     
     
     def set_cwd(self, cwd):
