@@ -43,7 +43,7 @@ plugin_initialize_options(plugin_option_struct *plugin_options)
     plugin_options->IRRIGATION = false;
     plugin_options->WOFOST = false;
     plugin_options->UH_LENGTH = 0;
-    plugin_options->FORCE_ROUTING = false;
+    plugin_options->FORCE_ROUTING = true;
     plugin_options->FORCE_LANDUSE = false;
     plugin_options->NDAMTYPES = 0;
     plugin_options->NWUTYPES = WU_NSECTORS;

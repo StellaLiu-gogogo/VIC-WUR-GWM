@@ -85,6 +85,7 @@ def PostProcessVIC(config, startyear, startmonth):
         human_or_nat = "naturalized"
     output_dir = config.paths.output_dir
     output_file = os.path.join(output_dir, f"fluxes_{human_or_nat}_gwm_.{startyear}-{startmonth:02d}.nc")
+    
     vicout = nc.Dataset(output_file, 'r')
     print('Do a check if it is a coupling run(check if there is baseflow reported from VIC:)')
     if vicout.variables['OUT_BASEFLOW'][:,:,:].sum() == 0:
