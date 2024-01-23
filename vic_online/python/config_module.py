@@ -16,6 +16,8 @@ class Pathconfig:
     statefile_dir: str = os.path.join(cwd , 'python', 'statefile')
     configfile_dir: str =  os.path.join(cwd , 'python', 'configfile')
     vic_executable: str = '/lustre/nobackup/WUR/ESG/liu297/vic_indus/11indus_run/99vic_offline_src/drivers/image/vic_image_gwm.exe'
+    vic_param: str = '/lustre/nobackup/WUR/ESG/liu297/vic_indus/11indus_run/05Parameters/VIC_params_Modis_calibrated_Indus.nc' #TODO: later if you want to change it? 
+    vic_derived_param: str = '/lustre/nobackup/WUR/ESG/liu297/vic_indus/11indus_run/05Parameters/VIC_derived_param_for_coupling.nc' #TODO: later if you want to change it?
     mfinput_dir: str = '/lustre/nobackup/WUR/ESG/yuan018/04Input_Indus/'  #TODO: later move everything from here to my own folder
     vicextrainput_dir: str = os.path.join(cwd, 'python', 'vicextrainput')
     output_dir: str = os.path.join(cwd, 'python', 'output')
@@ -45,8 +47,9 @@ class Pathconfig:
     topl2_gwl: nc.Dataset = nc.Dataset(mfinput_dir + 'topl2_gwl_Indus_monthly_1968to2000.nc')
     gwll2: np.ndarray = topl2_gwl.variables['gwl'][:].data
     gwll2: np.ndarray = np.flip(gwll2, axis=1)
-    initialhead: nc.Dataset = nc.Dataset('/lustre/nobackup/WUR/ESG/yuan018/87Logbook/try_successful_steady_state_1213/Indus_gwl_steady_state.nc')
+    initialhead: nc.Dataset = nc.Dataset(mfinput_dir + 'Indus_gwl_steady_state_final.nc')
     cpr: nc.Dataset = nc.Dataset('/lustre/nobackup/WUR/ESG/liu297/gitrepo/VIC-WUR-GWM-1910/vic_online/python/mfinput/CPsurface.nc')
+    
     def set_cwd(self, cwd):
         self.cwd = cwd
     def set_template_dir(self, template_dir):

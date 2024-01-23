@@ -207,6 +207,7 @@ class PostProcessMF:
         self.headfile = "{}_{}.hds".format(self.name, self.current_date.strftime("%Y%m%d"))
         self.config = config_instance
         self.baseflow_array = self.get_baseflow_array()
+        self.cpr_mm = self.get_cpr_array()
 
     def get_baseflow_array(self):
         cbb = flopy.utils.CellBudgetFile(self.mfoutput_dir+'/'+self.cbbfile)
@@ -240,7 +241,7 @@ class PostProcessMF:
         #baseflow_array[baseflow_array == -8888] = np.nan
         return baseflow_array
 
-    def save2nc(self):
+    def savebf2nc(self):
         indus_file_path = '/lustre/nobackup/WUR/ESG/yuan018/99Unuse/domain_Indus.nc'
         forcinginputdir = self.config.paths.vicextrainput_dir
       
@@ -289,7 +290,35 @@ class PostProcessMF:
                 month_index = np.where(time_var[:] == new_time)[0][0]
                 baseflow2forcing = -1 * np.flip(self.baseflow_array[0], axis=0)
                 discharge_var[month_index, :, :] = baseflow2forcing
-            
+    def get_cpr_array(self):
+        cbb = flopy.utils.CellBudgetFile(self.mfoutput_dir+'/'+self.cbbfile)
+        cellarea = self.config.paths.cellarea
+        
+        evt_raw = cbb.get_data(text = 'EVT')
+        evt = [(item['node'],item['q'],item['q']) for item in evt_raw]
+        ncol, nrow = 204,180
+        cpr = []
+        for i in range(len(evt[0][0])):
+            idx = evt[0][0][i]
+            lay = 0
+            row = idx//ncol
+            col = idx%ncol-1
+            flow = evt[0][2][i]
+            rec = [lay,row,col,flow]
+            cpr.append(rec)
+        totalcpr = 0
+        cpr_array = np.full((nrow, ncol), np.nan)
+
+        totalcpr = 0
+        for item in cpr:
+            lay, row, col, flow = item
+            totalcpr += flow
+            cpr_array[row,col] = flow
+
+        cpr_mm = cpr_array/cellarea
+        print(f'the total capillary rise is {totalcpr} m3/d')
+        
+        return cpr_mm
                                       
                                       
                                       

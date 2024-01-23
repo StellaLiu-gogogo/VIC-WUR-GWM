@@ -104,4 +104,32 @@ def PostProcessVIC(config, startyear, startmonth):
         ts_gwabstract = np.zeros_like(ts_gwrecharge)
     
     return ts_gwrecharge, ts_discharge, ts_gwabstract
+#%%
+def update_statefile(current_date,stateyear,statemonth,stateday,cpr_mm_month,config):
+    
+    max_moist_file = config.paths.vic_derived_param
+    #read the parameter file to get the fraction for each veg class
+    with nc.Dataset(param_file,'r') as param:
+        veg_class_fraction = param.variables['Cv'][:]
+    with nc.Dataset(max_moist_file,'r') as max_moist:
+        max_moisture = max_moist.variables['max_moist'][:]
+    
+    # split the 
+    
+    
+    
+    # Read the state file
+    statefile_dir = config.paths.statefile_dir
+    state_file = os.path.join(statefile_dir, f"state_file_.{stateyear}_{statemonth}_{stateday}_00000.nc")
+    stateout = nc.Dataset(state_file, 'r')
+    # read the 3 soil moisture layers 
+    soil_moisture = stateout.variables['OUT_SOIL_MOIST'][14,0,:,:]
+    # uadd the cpr_mm_month first 
+
+
+
+
+
+
+    print("updated the state file for the next time step")
 # %%

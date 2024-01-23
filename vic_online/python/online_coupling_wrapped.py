@@ -35,7 +35,7 @@ config_indus_ubuntu.set_humanimpact(False)
 
 
 current_date = datetime(1968,1,1)
-finishdate = datetime(1969,3,1)
+finishdate = datetime(1968,3,1)
 
 # Loop over the dates
 while current_date <= finishdate:
@@ -71,15 +71,10 @@ while current_date <= finishdate:
                stateyear, statemonth, stateday, 
                init_date, init_datestr, 
                config_indus_ubuntu)    
-    #vr.run_vic(config_indus_ubuntu, config_file, startyear, startmonth)    
+    vr.run_vic(config_indus_ubuntu, config_file, startyear, startmonth)    
     
     ts_gwrecharge, ts_discharge, ts_gwabstract = vr.PostProcessVIC(config_indus_ubuntu, startyear, startmonth) # read VIC output and prepare for MODFLOW input
-    
-
-    #config_indus_ubuntu.set_ts_gwrecharge(ts_gwrecharge)
-    #config_indus_ubuntu.set_ts_discharge(ts_discharge)
-    #config_indus_ubuntu.set_vic_output_file(os.path.join(config_indus_ubuntu.paths.output_dir + 'fluxes_naturalized_gwm_.{current_date.year}_{current_date.month}.nc'))
-        
+         
     stress_period = config_indus_ubuntu.timestep_counter() # let stress period ++1 after each VIC run
     print(f"start assigning the MODFLOW inputs for stress period {stress_period}...\n")
 
@@ -90,24 +85,17 @@ while current_date <= finishdate:
     mfrun = mf.mfrun(current_date,stress_period,config_indus_ubuntu,layer1_head,layer2_head,ts_gwrecharge,ts_discharge,ts_gwabstract) # 把日期传递给mfrun这个类
    
     layer1_head, layer2_head = mfrun.run_modflow() # run MODFLOW and get the head for each layer
-    
     pp = mf.PostProcessMF(config_indus_ubuntu, current_date) # get the baseflow from MODFLOW output
     
     baseflow = pp.baseflow_array
     print('generated baseflow')
-    pp.save2nc()
+    pp.savebf2nc()
     print('saved baseflow to nc')
-    
-    
-    
-    
-    
-    #mf.Feedback2VIC()
-        #1. read the current soil moisture and update it based on the condition. 
-    
-    #vr.update_statefile()
-        #1. update the statefile's soil moisture for the next time step. 
-    
+    cpr_mm = pp.cpr_mm 
+    cpr_mm_month = cpr_mm * endday
+    # update cpr_mm 
+    vr.update_statefile(current_date, stateyear, statemonth, stateday,cpr_mm_month, config_indus_ubuntu)
+    print('updated statefile')    
     #move to next time step
     current_date += relativedelta(months=1)
 # %%

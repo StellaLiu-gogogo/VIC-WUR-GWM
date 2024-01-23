@@ -5,7 +5,9 @@ vic_online/python/output
 vic_online/python/statefile
 vic_online/python/mfinput
 vic_online/python/mfoutput
+vic_online/python/vicextrainput
 vic_online/python/mfexe/vic_image_gwm_offline.exe
 vic_online/.ds_store
 vic_online/python/.DS_Store
 vic_online/python/__pycache__
+vic_online/python/testwrf
