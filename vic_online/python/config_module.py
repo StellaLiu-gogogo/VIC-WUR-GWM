@@ -1,6 +1,7 @@
 #%%
 # config_module.py
 
+import calendar
 import os
 from osgeo import gdal
 import numpy as np
@@ -11,11 +12,11 @@ from matplotlib import pyplot as plt
 
 @dataclass
 class Pathconfig:
-    cwd: str = '/lustre/nobackup/WUR/ESG/liu297/gitrepo/VIC-WUR-GWM-1910/vic_online/'
+    cwd: str = '/lustre/nobackup/WUR/ESG/yuan018/vic_from_sida/VIC-WUR-GWM-1910/vic_online/'
     template_dir: str = os.path.join(cwd, 'python', 'VIC_config_file_naturalized_template_pyread_txt')
     statefile_dir: str = os.path.join(cwd , 'python', 'statefile')
     configfile_dir: str =  os.path.join(cwd , 'python', 'configfile')
-    vic_executable: str = '/lustre/nobackup/WUR/ESG/liu297/vic_indus/11indus_run/99vic_offline_src/drivers/image/vic_image_gwm.exe'
+    vic_executable: str = '/lustre/nobackup/WUR/ESG/yuan018/vic_offline_src/drivers/image/vic_image_gwm.exe'
     vic_param: str = '/lustre/nobackup/WUR/ESG/liu297/vic_indus/11indus_run/05Parameters/VIC_params_Modis_calibrated_Indus.nc' #TODO: later if you want to change it? 
     vic_derived_param: str = '/lustre/nobackup/WUR/ESG/liu297/vic_indus/11indus_run/05Parameters/VIC_derived_param_for_coupling.nc' #TODO: later if you want to change it?
     mfinput_dir: str = '/lustre/nobackup/WUR/ESG/yuan018/04Input_Indus/'  #TODO: later move everything from here to my own folder
@@ -28,10 +29,10 @@ class Pathconfig:
     aqdepth_ini: np.ndarray = gdal.Open(mfinput_dir + 'damc_ave.nc').ReadAsArray()
     ksat_log: np.ndarray = gdal.Open(mfinput_dir + 'lkmc_ave.nc').ReadAsArray()
     cellarea: np.ndarray = gdal.Open(mfinput_dir + 'Indus_CellArea_m2_05min.nc').ReadAsArray()
-    qbank: np.ndarray =gdal.Open(mfinput_dir + 'Qbank_new_average.nc') 
+    qbank: np.ndarray =gdal.Open(mfinput_dir + 'Qbank_new_average.nc').ReadAsArray()
     riv_slope1: np.ndarray = gdal.Open(mfinput_dir+'slope05min_avgFrom30sec.nc').ReadAsArray()
     Z0_floodplain: np.ndarray = gdal.Open(mfinput_dir+'efplact_new_05min.nc').ReadAsArray()
-    qbank: np.ndarray = gdal.Open(mfinput_dir + 'mean_discharge_edwinInput.nc').ReadAsArray()
+    # qbank: np.ndarray = gdal.Open(mfinput_dir + 'mean_discharge_edwinInput.nc').ReadAsArray()
     min_dem: np.ndarray = gdal.Open(mfinput_dir+'mindem_05min.nc').ReadAsArray()
     KQ3: np.ndarray = gdal.Open(mfinput_dir + 'Recess_NEW.nc').ReadAsArray()
     conflayers: np.ndarray = gdal.Open(mfinput_dir + 'conflayers4.nc').ReadAsArray()
@@ -48,8 +49,8 @@ class Pathconfig:
     gwll2: np.ndarray = topl2_gwl.variables['gwl'][:].data
     gwll2: np.ndarray = np.flip(gwll2, axis=1)
     initialhead: nc.Dataset = nc.Dataset(mfinput_dir + 'Indus_gwl_steady_state_final.nc')
-    cpr: nc.Dataset = nc.Dataset('/lustre/nobackup/WUR/ESG/liu297/gitrepo/VIC-WUR-GWM-1910/vic_online/python/mfinput/CPsurface.nc')
-    
+    cpr: nc.Dataset = nc.Dataset('/lustre/nobackup/WUR/ESG/yuan018/vic_from_sida/VIC-WUR-GWM-1910/vic_online/python/mfinput/CPsurface.nc')
+        
     def set_cwd(self, cwd):
         self.cwd = cwd
     def set_template_dir(self, template_dir):
@@ -134,6 +135,7 @@ class config:
         self.startstamp =  datetime(1968, 1, 1)
         self.ts_gwrecharge = None
         self.ts_discharge = None
+        self.ts_gwabstract = np.zeros((180, 204)) 
         #self.ts_gwrecharge = self.paths.vic_output_file.variables['OUT_GWRECHARGE'][0,:,:].data
         #self.ts_gwrecharge = np.flip(self.ts_gwrecharge, axis=1)
         #self.ts_discharge = self.paths.vic_output_file.variables['OUT_DISCHARGE'][0,:,:].data
@@ -154,13 +156,19 @@ class config:
         self.ts_discharge = ts_discharge
         
     def set_ts_gwrecharge(self, ts_gwrecharge): # raw groundwater recharge data from the vic simulation for modflow
-        self.ts_gwrecharge = ts_gwrecharge        
+        self.ts_gwrecharge = ts_gwrecharge
+        
+    def set_ts_gwabstract(self, ts_gwabstract): # raw groundwater abstract data from the vic simulation for modflow
+        self.ts_gwabstract = ts_gwabstract              
     
     def set_startstamp(self, startstamp): # VIC start time
         self.startstamp = startstamp
     
     def timestep_counter(self): #remember to call this function after each time step
         self.stress_period += 1
+        return self.stress_period
+    def timestep_unset(self): #remember to call this function before each new run
+        self.stress_period = -1
         return self.stress_period    
     def set_humanimpact(self, humanimpact): # whether to vic simulation options for human impact is turned on
         self.humanimpact = humanimpact
@@ -249,10 +257,12 @@ class config:
         return k_hor,k_ver,stor
 
     def get_rch_param(self,current_date):
-        numofdays = current_date.day
+        _, numofdays = calendar.monthrange(current_date.year, current_date.month)
+
         rch_nat = self.ts_gwrecharge
 
         rch_nat = np.flip(rch_nat, axis=0)
+        # rch_nat = np.flip(rch_nat, axis=1)
         rcmissingvalue = rch_nat[179][0]
         rch_nat[self.paths.bdmask == 2 & (rch_nat ==rcmissingvalue)] = 0
         recharge_inp = ((rch_nat/(1000*numofdays)*self.paths.cellarea)/(self.delcol*self.delrow))
@@ -277,13 +287,37 @@ class config:
 
         return RCHstress_period_data
     
+    # def get_well_param(self,current_date):
+    #     numofdays = current_date.day
+    #     well_flux = -1 * self.ts_gwabstract
+    #     wellmissingvalue = well_flux[179][1]
+    #     well_flux[self.paths.bdmask ==2 & (well_flux==wellmissingvalue)]= 0
+    #     well_inp = well_flux/(1000*numofdays)*self.paths.cellarea
+    #     # well pumping on the top layer
+    #     well_inp[self.idomain == -1]=0
+    #     well_inp[self.idomain == -2]=0
+    #     well_inp[self.idomain == 0]=np.nan
+    #     nrow, ncol = well_inp.shape
+    #     cellids = [(0, i, j) for i in range(nrow) for j in range(ncol)]
+    #     # Create stress_period_data as a list of lists
+    #     WELLstress_period_data = []
+    #     for cellid, value, bdmask_ind in zip(cellids, well_inp.flatten(), self.paths.bdmask.flatten()):
+    #         if np.isnan(value) or value ==0 or bdmask_ind != 2:
+    #             continue
+    #         cellid_1, cellid_2, cellid_3 = cellid
+    #         WELLstress_period_data.append([cellid_1, cellid_2, cellid_3, value])
+            
+    #     return WELLstress_period_data
+
+    
     def get_riv_param(self):
         if not hasattr(self, 'top_layer1'):
             self.cal_toplayer_elevation()
         qaverage = self.paths.qbank
         monthly_discharge = self.ts_discharge
         monthly_discharge = np.flip(monthly_discharge, axis=0)
-        riv_manning, resistance, riv_bedres_inp = 0.045,1.0,1.0000
+        # monthly_discharge = np.flip(monthly_discharge, axis=1)
+        riv_manning, resistance = 0.045,1.0
         min_dem2 = np.where(self.paths.min_dem <0,0,self.paths.min_dem)
         Z0_floodplain1 = np.maximum(min_dem2, self.paths.Z0_floodplain)
         Z0_floodplain2 = np.where(self.paths.Z0_floodplain < 0.0, Z0_floodplain1, self.paths.Z0_floodplain)
@@ -304,7 +338,7 @@ class config:
         
         riv_depth_avg1 = ((riv_manning*((monthly_discharge)**0.5))/(riv_width*riv_slope_used**0.5))**(3.0/5.0) #  
         riv_depth_avg = np.where(riv_depth_avg1 < 0.01, 0.0, riv_depth_avg1)
-        riv_depth_avg = np.where(np.isnan(riv_depth_avg),0,riv_depth_avg)
+        riv_depth_avg = np.where(np.isnan(riv_depth_avg),0,riv_depth_avg)        
         riv_head=riv_bot_bkfl + riv_depth_avg
         riv_head2 = np.where(np.isnan(riv_head), riv_head_ini, riv_head)
         riv_head2 = np.where(riv_head == -1* self.missingvalue, riv_head_ini, riv_head)
@@ -345,6 +379,7 @@ class config:
             cellid_1, cellid_2, cellid_3 = cellid
             RIVstress_period_data.append([cellid_1, cellid_2, cellid_3, stage, cond, rbot])
         return RIVstress_period_data
+    
     def get_chd_input(self):
         CHDstress_period_data = []
         # first layer (top layer)
@@ -384,7 +419,7 @@ class config:
             CHDstress_period_data.append([cellid_1, cellid_2, cellid_3, self.paths.gwll2[self.stress_period][cellid_2][cellid_3]]) # cellid_1 is layer number: 0 for top, 1 for bot
         return CHDstress_period_data  
     
-    def get_cpr_param(self):
+    def get_cpr_param(self):#TODO
         CPRstress_period_data = []
         CPsurface = np.flip(self.paths.cpr.variables['cpsurface'][:].data, axis=0)
         CPrate = np.flip(self.paths.cpr.variables['max_capillary_flux'][:].data, axis=0)
@@ -399,6 +434,8 @@ class config:
             CPRstress_period_data.append([(cellid_1, cellid_2, cellid_3), surface, rate, distinction])
         
         return CPRstress_period_data
+
+        
     
         
 

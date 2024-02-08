@@ -1,13 +1,14 @@
 #%%
 from os.path import join
 import os
-os.chdir('/lustre/nobackup/WUR/ESG/liu297/gitrepo/VIC-WUR-GWM-1910/vic_online/python')
+os.chdir('/lustre/nobackup/WUR/ESG/yuan018/vic_from_sida/VIC-WUR-GWM-1910/vic_online/python')
 import subprocess
 from datetime import datetime, timedelta
 import config_module
 import netCDF4 as nc
 import numpy as np
 import support_function as sf
+import calendar
 
 #%%
 def prepare_vic(startyear, startmonth, startday, endyear, endmonth, endday, 
@@ -85,7 +86,7 @@ def PostProcessVIC(config, startyear, startmonth):
         human_or_nat = "naturalized"
     output_dir = config.paths.output_dir
     output_file = os.path.join(output_dir, f"fluxes_{human_or_nat}_gwm_.{startyear}-{startmonth:02d}.nc")
-    
+
     vicout = nc.Dataset(output_file, 'r')
     print('Do a check if it is a coupling run(check if there is baseflow reported from VIC:)')
     if vicout.variables['OUT_BASEFLOW'][:,:,:].sum() == 0:
@@ -96,40 +97,46 @@ def PostProcessVIC(config, startyear, startmonth):
         print("program will be stopped, please check the VIC configuration file")
         exit()   
     
-    ts_gwrecharge = vicout.variables['OUT_GWRECHARGE'][:,:,:] /1000 # mm/day to m/day
+    ts_gwrecharge = vicout.variables['OUT_GWRECHARGE'][:,:,:] /1000 # mm/day to m/day # with size of 1*180*204
     ts_discharge = vicout.variables['OUT_DISCHARGE'][:,:,:]  # keep it as m3/s
+
+    current_sp = config.stress_period + 1
     if config.humanimpact: 
-        ts_gwabstract = np.zeros_like(ts_gwrecharge) #TODO add process abstraction
+        # ts_gwabstract = ts_gwabstract.reshape(1, 180, 204) 
+        well_flux = vicout.variables['OUT_WI_NREN_SECT'][:]
+        well_flux_sum_wuclass = np.sum(well_flux, axis=1)
+        well_flux_flip = np.flip(well_flux_sum_wuclass, axis=1)
+        ts_gwabstract = well_flux_flip
     else:
         ts_gwabstract = np.zeros_like(ts_gwrecharge)
     
     return ts_gwrecharge, ts_discharge, ts_gwabstract
 #%%
-def update_statefile(current_date,stateyear,statemonth,stateday,cpr_mm_month,config):
+# def update_statefile(current_date,stateyear,statemonth,stateday,cpr_mm_month,config):  #TODO
     
-    max_moist_file = config.paths.vic_derived_param
-    #read the parameter file to get the fraction for each veg class
-    with nc.Dataset(param_file,'r') as param:
-        veg_class_fraction = param.variables['Cv'][:]
-    with nc.Dataset(max_moist_file,'r') as max_moist:
-        max_moisture = max_moist.variables['max_moist'][:]
+#     max_moist_file = config.paths.vic_derived_param
+#     #read the parameter file to get the fraction for each veg class
+#     with nc.Dataset(param_file,'r') as param:
+#         veg_class_fraction = param.variables['Cv'][:]
+#     with nc.Dataset(max_moist_file,'r') as max_moist:
+#         max_moisture = max_moist.variables['max_moist'][:]
     
-    # split the 
+#     # split the 
     
     
     
-    # Read the state file
-    statefile_dir = config.paths.statefile_dir
-    state_file = os.path.join(statefile_dir, f"state_file_.{stateyear}_{statemonth}_{stateday}_00000.nc")
-    stateout = nc.Dataset(state_file, 'r')
-    # read the 3 soil moisture layers 
-    soil_moisture = stateout.variables['OUT_SOIL_MOIST'][14,0,:,:]
-    # uadd the cpr_mm_month first 
+#     # Read the state file
+#     statefile_dir = config.paths.statefile_dir
+#     state_file = os.path.join(statefile_dir, f"state_file_.{stateyear}_{statemonth}_{stateday}_00000.nc")
+#     stateout = nc.Dataset(state_file, 'r')
+#     # read the 3 soil moisture layers 
+#     soil_moisture = stateout.variables['OUT_SOIL_MOIST'][14,0,:,:]
+#     # uadd the cpr_mm_month first 
 
 
 
 
 
 
-    print("updated the state file for the next time step")
+#     print("updated the state file for the next time step")
 # %%

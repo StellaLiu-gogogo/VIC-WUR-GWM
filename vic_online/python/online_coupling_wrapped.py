@@ -1,7 +1,7 @@
 #%%
 import os 
 import sys
-sys.path.append('/lustre/nobackup/WUR/ESG/liu297/gitrepo/VIC-WUR-GWM-1910/vic_online/python')
+sys.path.append('/lustre/nobackup/WUR/ESG/yuan018/vic_from_sida/VIC-WUR-GWM-1910/vic_online/python/')
 import flopy
 import numpy as np
 import xarray as xr
@@ -22,20 +22,22 @@ import shutil
 
 %env LD_LIBRARY_PATH=/shared/legacyapps/netcdf/gcc/64/4.6.1/lib:$LD_LIBRARY_PATH   
 #%%
-cwd = '/lustre/nobackup/WUR/ESG/liu297/gitrepo/VIC-WUR-GWM-1910/vic_online/'
+cwd = '/lustre/nobackup/WUR/ESG/yuan018/vic_from_sida/VIC-WUR-GWM-1910/vic_online/'
 config_indus_ubuntu.paths.set_template_dir(os.path.join(cwd, 'python', 'VIC_config_file_naturalized_template_pyread_anunna.txt'))
+# config_indus_ubuntu.paths.set_template_dir(os.path.join(cwd, 'python', 'VIC_config_file_naturalized_template_pyread_anunna.txt'))  #TODO
 config_indus_ubuntu.paths.set_statefile_dir(os.path.join(cwd, 'python', 'statefile'))
 config_indus_ubuntu.paths.set_configfile_dir(os.path.join(cwd, 'python', 'configfile'))
-config_indus_ubuntu.paths.set_vic_executable('/lustre/nobackup/WUR/ESG/liu297/vic_indus/11indus_run/99vic_offline_src/drivers/image/vic_image_gwm.exe')
+config_indus_ubuntu.paths.set_vic_executable('/lustre/nobackup/WUR/ESG/yuan018/vic_offline_src/drivers/image/vic_image_gwm.exe')
 config_indus_ubuntu.set_startstamp(datetime(1968, 1, 1))
 config_indus_ubuntu.paths.set_mfinput_dir('/lustre/nobackup/WUR/ESG/yuan018/04Input_Indus/')
-config_indus_ubuntu.paths.set_mfoutput_dir('/lustre/nobackup/WUR/ESG/liu297/gitrepo/VIC-WUR-GWM-1910/vic_online/python/mfoutput/workspace/')
-config_indus_ubuntu.set_humanimpact(False)
+config_indus_ubuntu.paths.set_mfoutput_dir('/lustre/nobackup/WUR/ESG/yuan018/vic_from_sida/VIC-WUR-GWM-1910/vic_online/python/mfoutput/workspace/')
+config_indus_ubuntu.set_humanimpact(False)  #TODO
 
 
 
 current_date = datetime(1968,1,1)
-finishdate = datetime(1968,3,1)
+finishdate = datetime(1969,12,1)
+stress_period = config_indus_ubuntu.timestep_unset() # reset the timestep counter
 
 # Loop over the dates
 while current_date <= finishdate:
@@ -91,11 +93,11 @@ while current_date <= finishdate:
     print('generated baseflow')
     pp.savebf2nc()
     print('saved baseflow to nc')
-    cpr_mm = pp.cpr_mm 
-    cpr_mm_month = cpr_mm * endday
+    # cpr_mm = pp.cpr_mm 
+    # cpr_mm_month = cpr_mm * endday
     # update cpr_mm 
-    vr.update_statefile(current_date, stateyear, statemonth, stateday,cpr_mm_month, config_indus_ubuntu)
-    print('updated statefile')    
+    # vr.update_statefile(current_date, stateyear, statemonth, stateday,cpr_mm_month, config_indus_ubuntu)
+    # print('updated statefile')    #TODO
     #move to next time step
     current_date += relativedelta(months=1)
 # %%

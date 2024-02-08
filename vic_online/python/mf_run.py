@@ -2,7 +2,7 @@
 import numpy as np
 import netCDF4 as nc
 import os
-os.chdir('/lustre/nobackup/WUR/ESG/liu297/gitrepo/VIC-WUR-GWM-1910/vic_online/python')
+os.chdir('/lustre/nobackup/WUR/ESG/yuan018/vic_from_sida/VIC-WUR-GWM-1910/vic_online/python')
 from osgeo import gdal
 import flopy
 import calendar
@@ -69,10 +69,11 @@ class mfrun:
         
         config_indus_ubuntu.set_ts_gwrecharge(self.ts_gwrecharge[0])
         config_indus_ubuntu.set_ts_discharge(self.ts_discharge[0])
-        #config_indus_ubuntu.paths.set_ts_gwabstract(self.ts_gwabstract[0]) #TODO
+        # config_indus_ubuntu.paths.set_ts_gwabstract(self.ts_gwabstract[0]) #TODO
         RCHstress_period_data = self.config.get_rch_param(self.current_date)
         RIVstress_period_data = self.config.get_riv_param()
         CPRstress_period_data = self.config.get_cpr_param()
+        # WELLstress_period_data = self.config.get_well_param(self.current_date) 
         sim = flopy.mf6.MFSimulation(sim_name= self.name, 
                                      version='mf6', 
                                      sim_ws=self.config.paths.mfoutput_dir, 
@@ -170,6 +171,11 @@ class mfrun:
                                       nseg = 1,
                                       stress_period_data = CPRstress_period_data
                                       )
+        # well = flopy.mf6.ModflowGwfwel(gwf,
+        #                                stress_period_data= WELLstress_period_data, 
+        #                                print_flows = False, 
+        #                                save_flows = True)  #TODO
+        
         saverecord = [("HEAD", "ALL"), ("BUDGET", "ALL")]
         printrecord = [("HEAD", "ALL"), ("BUDGET", "ALL")]
         headfile = "{}_{}.hds".format(self.name,self.current_date.strftime("%Y%m%d"))
@@ -227,7 +233,7 @@ class PostProcessMF:
         totalbaseflow = 0
         totalriverleakage = 0
         
-        baseflow_array = -8888*np.ones((1,nrow,ncol))
+        baseflow_array = np.zeros((1,nrow,ncol))
         for item in baseflow:
             lay, row, col, flow = item
             flow /= 86400
@@ -290,6 +296,8 @@ class PostProcessMF:
                 month_index = np.where(time_var[:] == new_time)[0][0]
                 baseflow2forcing = -1 * np.flip(self.baseflow_array[0], axis=0)
                 discharge_var[month_index, :, :] = baseflow2forcing
+                
+                
     def get_cpr_array(self):
         cbb = flopy.utils.CellBudgetFile(self.mfoutput_dir+'/'+self.cbbfile)
         cellarea = self.config.paths.cellarea
