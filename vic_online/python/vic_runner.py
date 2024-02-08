@@ -9,6 +9,7 @@ import netCDF4 as nc
 import numpy as np
 import support_function as sf
 import calendar
+import calendar
 
 #%%
 def prepare_vic(startyear, startmonth, startday, endyear, endmonth, endday, 
@@ -112,31 +113,63 @@ def PostProcessVIC(config, startyear, startmonth):
     
     return ts_gwrecharge, ts_discharge, ts_gwabstract
 #%%
-# def update_statefile(current_date,stateyear,statemonth,stateday,cpr_mm_month,config):  #TODO
-    
-#     max_moist_file = config.paths.vic_derived_param
-#     #read the parameter file to get the fraction for each veg class
-#     with nc.Dataset(param_file,'r') as param:
-#         veg_class_fraction = param.variables['Cv'][:]
-#     with nc.Dataset(max_moist_file,'r') as max_moist:
-#         max_moisture = max_moist.variables['max_moist'][:]
-    
-#     # split the 
+def update_statefile(current_date,stateyear,statemonth,stateday,cpr_mm_month,config):
+    currentyear = current_date.year
+    currentmonth = current_date.month
+
+    #find the cv file with the corresponding year
+    cv_file = config.paths.cvdir+f'coverage_monthly_MIRCA_{currentyear}.nc'
     
     
+    max_moist_file = config.paths.vic_derived_param
+    #read the parameter file to get the fraction for each veg class
+    with nc.Dataset(cv_file,'r') as param:
+        veg_class_fraction = param.variables['coverage'][currentmonth-1,:,:,:]
+    with nc.Dataset(max_moist_file,'r') as max_moist:
+        max_moisture = max_moist.variables['max_moist'][:]
+    veg_class_fraction = np.flip(veg_class_fraction,axis = 1)
+    max_moisture = np.flip(max_moisture,axis = 1)
     
-#     # Read the state file
-#     statefile_dir = config.paths.statefile_dir
-#     state_file = os.path.join(statefile_dir, f"state_file_.{stateyear}_{statemonth}_{stateday}_00000.nc")
-#     stateout = nc.Dataset(state_file, 'r')
-#     # read the 3 soil moisture layers 
-#     soil_moisture = stateout.variables['OUT_SOIL_MOIST'][14,0,:,:]
-#     # uadd the cpr_mm_month first 
+    cpr_mm_month_input = np.repeat(cpr_mm_month[np.newaxis,:,:],22,axis = 0)
 
+    
+    
+    
+    # Read the state file
+    statefile_dir = config.paths.statefile_dir
+    state_file = os.path.join(statefile_dir, f"state_file_.{stateyear:04d}{statemonth:02d}{stateday:02d}_00000.nc")
+    with nc.Dataset(state_file,'r') as state:
+        state_soil_moisture = state.variables['STATE_SOIL_MOISTURE'][:,0,:,:,:]
+        state_soil_moisture = np.flip(state_soil_moisture,axis = 2)
 
+    sum_soil_moisture = np.zeros((3, 180, 204))
+    state_soil_moisture_new = state_soil_moisture.copy()
+    state_soil_moisture_new[:,2,:,:] = state_soil_moisture [:,2,:,:]+ cpr_mm_month_input
+    for layer in range(2, -1, -1):  # loop through the soil layers from bottom to top
+        sum_soil_moisture[layer] = np.nansum(state_soil_moisture_new[:, layer, :, :] * veg_class_fraction, axis=0) # sum up the soil moisture for each veg type
 
-
-
-
-#     print("updated the state file for the next time step")
+        #check if the soil moist is saturated.  
+        checksaturation = (sum_soil_moisture[layer]> max_moisture[layer]) #true if it is saturated
+        if checksaturation.any():
+            print(f'there are cells in layer {layer+1} saturated')
+            excess_water = sum_soil_moisture[layer] - max_moisture[layer]
+            excess_water[excess_water<0] = 0
+            # let the current layer soil moisture be the max moisture
+            for i in range(22):
+                state_soil_moisture_new[i, layer, :, :][checksaturation] = max_moisture[layer][checksaturation]
+            # add the extra to the upper layer
+                if layer > 0:
+                    state_soil_moisture_new[i, layer-1, :, :][checksaturation] += excess_water[checksaturation]
+                else:
+                    print(f'layer {layer+1} is the top layer, no where to add the excess water')
+                            
+        else:
+            print(f'layer {layer+1} is not saturated')
+            break     
+    #write the soil moisture back to the state file
+    with nc.Dataset(state_file,'a') as state:
+        state.variables['STATE_SOIL_MOISTURE'][:,0,:,:,:] = np.flip(state_soil_moisture_new,axis = 2)
+    
+    print("updated the state file for the next time step")
+    
 # %%
