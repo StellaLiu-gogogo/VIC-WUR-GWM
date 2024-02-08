@@ -8,7 +8,7 @@ import netCDF4 as nc
 from datetime import datetime 
 from dataclasses import dataclass
 from matplotlib import pyplot as plt
-
+import calendar
 @dataclass
 class Pathconfig:
     cwd: str = '/lustre/nobackup/WUR/ESG/liu297/gitrepo/VIC-WUR-GWM-1910/vic_online/'
@@ -28,10 +28,10 @@ class Pathconfig:
     aqdepth_ini: np.ndarray = gdal.Open(mfinput_dir + 'damc_ave.nc').ReadAsArray()
     ksat_log: np.ndarray = gdal.Open(mfinput_dir + 'lkmc_ave.nc').ReadAsArray()
     cellarea: np.ndarray = gdal.Open(mfinput_dir + 'Indus_CellArea_m2_05min.nc').ReadAsArray()
-    qbank: np.ndarray =gdal.Open(mfinput_dir + 'Qbank_new_average.nc') 
+    qbank: np.ndarray =gdal.Open(mfinput_dir + 'Qbank_new_average.nc').ReadAsArray()
     riv_slope1: np.ndarray = gdal.Open(mfinput_dir+'slope05min_avgFrom30sec.nc').ReadAsArray()
     Z0_floodplain: np.ndarray = gdal.Open(mfinput_dir+'efplact_new_05min.nc').ReadAsArray()
-    qbank: np.ndarray = gdal.Open(mfinput_dir + 'mean_discharge_edwinInput.nc').ReadAsArray()
+    #qbank: np.ndarray = gdal.Open(mfinput_dir + 'mean_discharge_edwinInput.nc').ReadAsArray()
     min_dem: np.ndarray = gdal.Open(mfinput_dir+'mindem_05min.nc').ReadAsArray()
     KQ3: np.ndarray = gdal.Open(mfinput_dir + 'Recess_NEW.nc').ReadAsArray()
     conflayers: np.ndarray = gdal.Open(mfinput_dir + 'conflayers4.nc').ReadAsArray()
@@ -49,6 +49,7 @@ class Pathconfig:
     gwll2: np.ndarray = np.flip(gwll2, axis=1)
     initialhead: nc.Dataset = nc.Dataset(mfinput_dir + 'Indus_gwl_steady_state_final.nc')
     cpr: nc.Dataset = nc.Dataset('/lustre/nobackup/WUR/ESG/liu297/gitrepo/VIC-WUR-GWM-1910/vic_online/python/mfinput/CPsurface.nc')
+    cvdir: str = '/lustre/nobackup/WUR/ESG/liu297/vic_indus/11indus_run/04Forcing/02HumanImpact/coverage_monthly_MIRCA/'
     
     def set_cwd(self, cwd):
         self.cwd = cwd
@@ -249,13 +250,15 @@ class config:
         return k_hor,k_ver,stor
 
     def get_rch_param(self,current_date):
-        numofdays = current_date.day
+        _, numofdays = calendar.monthrange(current_date.year, current_date.month)
+        
         rch_nat = self.ts_gwrecharge
+        
 
         rch_nat = np.flip(rch_nat, axis=0)
         rcmissingvalue = rch_nat[179][0]
         rch_nat[self.paths.bdmask == 2 & (rch_nat ==rcmissingvalue)] = 0
-        recharge_inp = ((rch_nat/(1000*numofdays)*self.paths.cellarea)/(self.delcol*self.delrow))
+        recharge_inp = ((rch_nat/(numofdays)*self.paths.cellarea)/(self.delcol*self.delrow))
         recharge_inp = np.where(recharge_inp < 10000, recharge_inp, 0)
         npzero = np.zeros_like(recharge_inp)
         # recharge on the top layer    
@@ -265,6 +268,7 @@ class config:
         recharge_inp[self.idomain == -2]=0
         recharge_inp[self.idomain == 0]=np.nan
         nrow, ncol = recharge_inp.shape
+
         cellids = [(0, i, j) for i in range(nrow) for j in range(ncol)]
         # Create stress_period_data as a list of lists (leave it for mf6)
         RCHstress_period_data = []
@@ -282,6 +286,7 @@ class config:
             self.cal_toplayer_elevation()
         qaverage = self.paths.qbank
         monthly_discharge = self.ts_discharge
+
         monthly_discharge = np.flip(monthly_discharge, axis=0)
         riv_manning, resistance, riv_bedres_inp = 0.045,1.0,1.0000
         min_dem2 = np.where(self.paths.min_dem <0,0,self.paths.min_dem)

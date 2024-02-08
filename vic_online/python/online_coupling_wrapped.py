@@ -35,7 +35,7 @@ config_indus_ubuntu.set_humanimpact(False)
 
 
 current_date = datetime(1968,1,1)
-finishdate = datetime(1968,3,1)
+finishdate = datetime(1975,1,1)
 
 # Loop over the dates
 while current_date <= finishdate:
@@ -91,11 +91,11 @@ while current_date <= finishdate:
     print('generated baseflow')
     pp.savebf2nc()
     print('saved baseflow to nc')
-    cpr_mm = pp.cpr_mm 
-    cpr_mm_month = cpr_mm * endday
+    #cpr_mm = pp.cpr_mm 
+    #cpr_mm_month = cpr_mm * endday*1000*-1
     # update cpr_mm 
-    vr.update_statefile(current_date, stateyear, statemonth, stateday,cpr_mm_month, config_indus_ubuntu)
+    #vr.update_statefile(current_date, stateyear, statemonth, stateday,cpr_mm_month, config_indus_ubuntu)
     print('updated statefile')    
     #move to next time step
     current_date += relativedelta(months=1)
-# %%
+#%%
