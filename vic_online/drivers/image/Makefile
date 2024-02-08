@@ -86,7 +86,7 @@ OFILES = $(patsubst %.c,%.o, \
 	$(wildcard ${PLUGINPATH}/**/src/*.c))
 
 # Uncomment to include debugging information
-CFLAGS  =  ${INCLUDES} ${NC_CFLAGS} -ggdb -O0 -Wall -Wextra -fcommon -std=c99 \
+CFLAGS  =  ${INCLUDES} ${NC_CFLAGS} -ggdb -O3 -Wall -Wextra -fcommon -std=c99 \
 					 -fopenmp \
 					 -DLOG_LVL=$(LOG_LVL) \
 					 -DGIT_VERSION=\"$(GIT_VERSION)\" \
