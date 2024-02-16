@@ -142,7 +142,7 @@ WOFOST_TEXT_PARAMETERS 	  /lustre/nobackup/WUR/ESG/liu297/vic_indus/11indus_run/
 # Output Options
 #######################################################################
 RESULT_DIR						/lustre/nobackup/WUR/ESG/liu297/gitrepo/VIC-WUR-GWM-1910/vic_online/python/output/
-OUTFILE							 fluxes_naturalized_uncoupled_gwm_
+OUTFILE							 fluxes_naturalized_gwm_
 LOG_DIR                         /lustre/nobackup/WUR/ESG/liu297/gitrepo/VIC-WUR-GWM-1910/vic_online/python/output/
 
 OUT_FORMAT						NETCDF4

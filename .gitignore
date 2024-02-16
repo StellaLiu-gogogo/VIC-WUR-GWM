@@ -11,3 +11,6 @@ vic_online/.ds_store
 vic_online/python/.DS_Store
 vic_online/python/__pycache__
 vic_online/python/testwrf
+vic_online/python/job
+vic_online/python/TEMP_script
+vic_online/python/vicextrainput
