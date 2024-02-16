@@ -127,8 +127,13 @@ class Pathconfig:
         self.qbank = qbank
     def set_cpr(self, cpr):
         self.cpr = cpr
-
-    
+    def close_all_nc(self):
+        #self.vic_output_file.close()
+        self.nc_boundary.close()
+        self.topl1_gwl.close()
+        self.topl2_gwl.close()
+           
+        
 class config:
     def __init__(self): #without specifying the input, the default input will be used as below: 
         self.paths = Pathconfig()
@@ -399,7 +404,7 @@ class config:
         cellids = [(0, i, j) for i in range(nrow) for j in range(ncol)]        
         for cellid,surface,rate,distinction,bdmask in zip(cellids,CPsurface.flatten(),CPrate.flatten(),CPdistinct.flatten(),self.bdmask.flatten()):
             cellid_1, cellid_2, cellid_3 = cellid
-            if np.isnan(surface) or np.isnan(rate) or np.isnan(distinction) or bdmask <=0 :
+            if np.isnan(surface) or np.isnan(rate) or np.isnan(distinction) or bdmask <=0 or rate==0:
                 continue
             CPRstress_period_data.append([(cellid_1, cellid_2, cellid_3), surface, rate, distinction])
         

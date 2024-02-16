@@ -27,7 +27,7 @@ class mfrun:
         self.name = '2Ltrans_off'
         self.rclose = 10
         self.maxinner = 500
-        self.maxouter = 100
+        self.maxouter = 200
         self.outer_dvclose = 5
         self.inner_dvclose = 5
         self.top_layer1 = self.config.cal_toplayer_elevation()

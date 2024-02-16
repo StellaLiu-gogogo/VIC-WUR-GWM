@@ -1,5 +1,6 @@
 #%%
 import os 
+os.chdir('/lustre/nobackup/WUR/ESG/liu297/gitrepo/VIC-WUR-GWM-1910/vic_online/python')
 import sys
 sys.path.append('/lustre/nobackup/WUR/ESG/liu297/gitrepo/VIC-WUR-GWM-1910/vic_online/python')
 import flopy
@@ -20,7 +21,7 @@ import mf_run as mf
 import shutil
 
 
-%env LD_LIBRARY_PATH=/shared/legacyapps/netcdf/gcc/64/4.6.1/lib:$LD_LIBRARY_PATH   
+#%env LD_LIBRARY_PATH=/shared/legacyapps/netcdf/gcc/64/4.6.1/lib:$LD_LIBRARY_PATH   
 #%%
 cwd = '/lustre/nobackup/WUR/ESG/liu297/gitrepo/VIC-WUR-GWM-1910/vic_online/'
 config_indus_ubuntu.paths.set_template_dir(os.path.join(cwd, 'python', 'VIC_config_file_naturalized_template_pyread_anunna.txt'))
@@ -35,7 +36,7 @@ config_indus_ubuntu.set_humanimpact(False)
 
 
 current_date = datetime(1968,1,1)
-finishdate = datetime(1975,1,1)
+finishdate = datetime(2000,1,1)
 
 # Loop over the dates
 while current_date <= finishdate:
@@ -91,11 +92,14 @@ while current_date <= finishdate:
     print('generated baseflow')
     pp.savebf2nc()
     print('saved baseflow to nc')
-    #cpr_mm = pp.cpr_mm 
-    #cpr_mm_month = cpr_mm * endday*1000*-1
+    cpr_mm = pp.cpr_mm 
+    cpr_mm_month = cpr_mm * endday*1000*-1
+    
     # update cpr_mm 
-    #vr.update_statefile(current_date, stateyear, statemonth, stateday,cpr_mm_month, config_indus_ubuntu)
+    vr.update_statefile(current_date, stateyear, statemonth, stateday,cpr_mm_month, config_indus_ubuntu)
     print('updated statefile')    
     #move to next time step
+    #config_indus_ubuntu.paths.close_all_nc()
     current_date += relativedelta(months=1)
+    
 #%%
