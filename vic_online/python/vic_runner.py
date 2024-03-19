@@ -74,6 +74,8 @@ def run_vic(config, config_file, startyear, startmonth):
     try:
         command = 'bash -c "{} -g {}"'.format(vic_executable, config_file)
         subprocess.run(command, check=True, shell=True)
+        print(f'currently using the config file {config_file}')
+        print(f'currently using the vic executable {vic_executable}')
         print("VIC-WUR run successfully for time step [{}-{}]".format(startyear, startmonth))
     except subprocess.CalledProcessError:
         raise SystemExit("Stopping the simulation due to failure in VIC execution.")

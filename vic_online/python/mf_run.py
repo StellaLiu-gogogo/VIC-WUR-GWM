@@ -250,9 +250,9 @@ class PostProcessMF:
             output_file = os.path.join(forcinginputdir, f"forcing_discharge_{self.current_date.year+1}.nc")
             shutil.copy(indus_file_path, output_file)
             with nc.Dataset(output_file,'a') as nc_file:
-                nc_file.createDimension('time', 12)
+                nc_file.createDimension('time', None)
                 time_var = nc_file.createVariable('time', 'f8', ('time',))
-                time_var.units = f'days since {self.current_date.year+1}-01-01 00:00:00'
+                time_var.units = 'days since 1968-01-01 00:00:00'
                 time_var.calendar = 'standard'
                 time_var.standard_name = 'time'
                 time_var.long_name = 'time'
@@ -309,7 +309,7 @@ class PostProcessMF:
             rec = [lay,row,col,flow]
             cpr.append(rec)
         totalcpr = 0
-        cpr_array = np.full((nrow, ncol), np.nan)
+        cpr_array = np.full((nrow, ncol), 0)
 
         totalcpr = 0
         for item in cpr:
@@ -318,6 +318,7 @@ class PostProcessMF:
             cpr_array[row,col] = flow
 
         cpr_mm = cpr_array/cellarea
+      
         print(f'the total capillary rise is {totalcpr} m3/d')
         
         return cpr_mm
